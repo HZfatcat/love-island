@@ -438,9 +438,26 @@
     }
 
     // ====== 自定义 Hook ======
-    function useCountdown(targetDate) {
+    function useCountdown(targetDate, datesList) {
         var _a = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 }), timeLeft = _a[0], setTimeLeft = _a[1];
         var _b = useState(0), totalDays = _b[0], setTotalDays = _b[1];
+        var _c = useState({ name: '', days: 0 }), nextDate = _c[0], setNextDate = _c[1];
+
+        function findNextSpecial(dates) {
+            var now = new Date();
+            var nearest = null, nearestDays = Infinity;
+            (dates || []).forEach(function(d) {
+                var target = new Date(d.date);
+                target.setFullYear(now.getFullYear());
+                if (target < now) target.setFullYear(now.getFullYear() + 1);
+                var days = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+                if (days < nearestDays) {
+                    nearestDays = days;
+                    nearest = { name: d.name, days: days, date: target };
+                }
+            });
+            return nearest || { name: '', days: 0, date: new Date() };
+        }
 
         useEffect(function() {
             function calc() {
@@ -448,10 +465,13 @@
                 var diff = now - targetDate;
                 setTotalDays(Math.floor(diff / (1000 * 60 * 60 * 24)));
 
-                var nextAnni = new Date(targetDate);
-                nextAnni.setFullYear(now.getFullYear());
-                if (nextAnni < now) nextAnni.setFullYear(now.getFullYear() + 1);
-                var nd = nextAnni - now;
+                // 找到最近的下一个纪念日
+                var next = findNextSpecial(datesList);
+                setNextDate({ name: next.name, days: next.days });
+
+                // 倒计时到下一个纪念日
+                var nd = next.date - now;
+                if (nd < 0) nd = 0;
                 setTimeLeft({
                     days: Math.floor(nd / (1000 * 60 * 60 * 24)),
                     hours: Math.floor((nd % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
@@ -462,9 +482,9 @@
             calc();
             var timer = setInterval(calc, 1000);
             return function() { clearInterval(timer); };
-        }, [targetDate]);
+        }, [targetDate, datesList]);
 
-        return { days: timeLeft.days, hours: timeLeft.hours, minutes: timeLeft.minutes, seconds: timeLeft.seconds, totalDays: totalDays };
+        return { days: timeLeft.days, hours: timeLeft.hours, minutes: timeLeft.minutes, seconds: timeLeft.seconds, totalDays: totalDays, nextDate: nextDate };
     }
 
     // ====== 子组件 ======
@@ -492,7 +512,6 @@
     // ====== 主应用 ======
     function App() {
         var _a = useState('home'), activeTab = _a[0], setActiveTab = _a[1];
-        var cd = useCountdown(LOVE_START);
 
         // 从 localStorage 恢复数据，无数据则用初始值
         var _b = useState(function() { return loadData('journal', INIT_JOURNAL); }), journalEntries = _b[0], setJournalEntries = _b[1];
@@ -505,6 +524,9 @@
         var specDates = loadData('specialDates', null);
         var _f2 = useState(specDates ? specDates.map(function(d) { return Object.assign({}, d, { date: new Date(d.date) }); }) : SPECIAL_DATES);
         var specialDates = _f2[0], setSpecialDates = _f2[1];
+
+        // 倒计时依赖 specialDates，放在后面初始化
+        var cd = useCountdown(LOVE_START, specialDates);
 
         // 自动保存到 localStorage
         useEffect(function() { saveData('journal', journalEntries); }, [journalEntries]);
@@ -642,7 +664,11 @@
                     h('div', { className: 'anniversary-days-label' }, '天的甜蜜旅程 💕')
                 ),
                 h('div', { className: 'card card-pattern-default', style: { marginBottom: 24, cursor: 'default' } },
-                    h('div', { style: { fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 16, textAlign: 'center' } }, '🌟 距离下一个纪念日还有'),
+                    h('div', { style: { fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 16, textAlign: 'center' } },
+                        '🌟 距离 ',
+                        h('span', { style: { color: 'var(--primary)' } }, cd.nextDate.name || '下一个纪念日'),
+                        ' 还有'
+                    ),
                     h('div', { className: 'countdown-grid' },
                         h('div', { className: 'countdown-item' }, h('div', { className: 'countdown-number' }, String(cd.days).padStart(2,'0')), h('div', { className: 'countdown-label' }, '天')),
                         h('div', { className: 'countdown-item' }, h('div', { className: 'countdown-number' }, String(cd.hours).padStart(2,'0')), h('div', { className: 'countdown-label' }, '小时')),
@@ -677,17 +703,17 @@
                         h('p', { style: { textAlign: 'center', color: 'var(--text-secondary)', fontSize: 14 } }, '今天的心情已记录 ~ 明天再来呀 💕')
                 ),
                 h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 } },
-                    h('div', { className: 'card card-solid-teal', style: { textAlign: 'center', cursor: 'default' } },
+                    h('div', { className: 'card card-solid-teal', style: { textAlign: 'center', cursor: 'pointer' }, onClick: function() { setActiveTab('diary'); } },
                         h('div', { style: { fontSize: 36, marginBottom: 8 } }, '📖'),
                         h('div', { style: { fontSize: 28, fontWeight: 900 } }, String(journalEntries.length)),
                         h('div', { style: { fontSize: 14, fontWeight: 600, opacity: 0.9 } }, '篇恋爱日记')
                     ),
-                    h('div', { className: 'card card-solid-pink', style: { textAlign: 'center', cursor: 'default' } },
+                    h('div', { className: 'card card-solid-pink', style: { textAlign: 'center', cursor: 'pointer' }, onClick: function() { setActiveTab('wishes'); } },
                         h('div', { style: { fontSize: 36, marginBottom: 8 } }, '🌟'),
                         h('div', { style: { fontSize: 28, fontWeight: 900 } }, wishes.filter(function(w) { return w.done; }).length + '/' + wishes.length),
                         h('div', { style: { fontSize: 14, fontWeight: 600, opacity: 0.9 } }, '心愿完成')
                     ),
-                    h('div', { className: 'card card-solid-blue', style: { textAlign: 'center', cursor: 'default' } },
+                    h('div', { className: 'card card-solid-blue', style: { textAlign: 'center', cursor: 'pointer' }, onClick: function() { setActiveTab('messages'); } },
                         h('div', { style: { fontSize: 36, marginBottom: 8 } }, '💌'),
                         h('div', { style: { fontSize: 28, fontWeight: 900 } }, String(messages.length)),
                         h('div', { style: { fontSize: 14, fontWeight: 600, opacity: 0.9 } }, '条甜蜜留言')
