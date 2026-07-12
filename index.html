@@ -2031,12 +2031,6 @@
                     )
                 ),
                 h('div', { style: { marginBottom: 16 } },
-                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '吵架原因'),
-                    h('div', { className: 'input-wrapper input-wrapper-middle' },
-                        h('input', { className: 'input-field', placeholder: '为什么吵架？', value: newFight.title, onChange: function(e) { setNewFight(Object.assign({}, newFight, { title: e.target.value })); } })
-                    )
-                ),
-                h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '详细经过'),
                     h('div', { className: 'textarea-wrapper' },
                         h('textarea', { className: 'textarea-field', placeholder: '发生了什么？各自的想法是什么？', value: newFight.reason, onChange: function(e) { setNewFight(Object.assign({}, newFight, { reason: e.target.value })); }, style: { minHeight: 100 } })
