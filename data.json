@@ -3,11 +3,11 @@
   "wishes": [],
   "messages": [
     {
-      "id": 2,
-      "sender": "大笨蛋",
-      "text": "早安！今天梦到你了，所以醒来特别开心🥰",
-      "time": "08:35",
-      "isSelf": false
+      "id": 3,
+      "sender": "小可爱",
+      "text": "今晚我们一起去看星星吧？天气预报说天气很好呢",
+      "time": "14:12",
+      "isSelf": true
     },
     {
       "id": 4,
