@@ -1753,18 +1753,46 @@
                 ),
                 h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '日期'),
-                    h('div', { className: 'input-wrapper input-wrapper-middle' },
-                        h('input', { className: 'input-field', type: 'date', value: editingDate ? editingDate.dateStr : '', onChange: function(e) { if (editingDate) setEditingDate(Object.assign({}, editingDate, { dateStr: e.target.value })); }, id: 'datePicker' })
-                    ),
-                    h('div', { style: { display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' } },
-                        h('button', { className: 'btn btn-small btn-default', onClick: function() { var d = new Date(); if (editingDate) setEditingDate(Object.assign({}, editingDate, { dateStr: d.toISOString().split('T')[0] })); } }, '📅 今天'),
-                        h('button', { className: 'btn btn-small btn-default', onClick: function() { var d = new Date(); d.setDate(d.getDate() + 1); if (editingDate) setEditingDate(Object.assign({}, editingDate, { dateStr: d.toISOString().split('T')[0] })); } }, '+1天'),
-                        h('button', { className: 'btn btn-small btn-default', onClick: function() { var d = new Date(); d.setDate(d.getDate() + 7); if (editingDate) setEditingDate(Object.assign({}, editingDate, { dateStr: d.toISOString().split('T')[0] })); } }, '+7天'),
-                        h('button', { className: 'btn btn-small btn-default', onClick: function() { var d = new Date(); d.setMonth(d.getMonth() + 1); if (editingDate) setEditingDate(Object.assign({}, editingDate, { dateStr: d.toISOString().split('T')[0] })); } }, '+30天')
-                    ),
-                    editingDate && editingDate.dateStr ? h('div', { style: { fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 } },
-                        '🌙 ' + getLunarDateStr(new Date(editingDate.dateStr))
-                    ) : null
+                    // 内联日历选择器
+                    function() {
+                        var now = new Date();
+                        var dpDate = editingDate && editingDate.dateStr ? new Date(editingDate.dateStr) : now;
+                        var dpYear = dpDate.getFullYear();
+                        var dpMonth = dpDate.getMonth();
+                        // 简化月历：显示年月 + 日期网格
+                        var firstDay = new Date(dpYear, dpMonth, 1).getDay();
+                        var daysInMonth = new Date(dpYear, dpMonth + 1, 0).getDate();
+                        var weekdays = ['日','一','二','三','四','五','六'];
+                        var monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+                        var cells = [];
+                        for (var i = 0; i < firstDay; i++) cells.push(0);
+                        for (var i = 1; i <= daysInMonth; i++) cells.push(i);
+                        return h('div', { style: { background: 'var(--bg)', borderRadius: 16, padding: 12, border: '2px solid var(--border)' } },
+                            h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 } },
+                                h('button', { style: { border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-body)', fontFamily: 'inherit' }, onClick: function() { if (editingDate) { var d = new Date(dpYear, dpMonth - 1, 1); setEditingDate(Object.assign({}, editingDate, { dateStr: d.toISOString().split('T')[0] })); } } }, '‹'),
+                                h('span', { style: { fontSize: 15, fontWeight: 700, color: 'var(--text)' } }, dpYear + '年 ' + monthNames[dpMonth]),
+                                h('button', { style: { border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-body)', fontFamily: 'inherit' }, onClick: function() { if (editingDate) { var d = new Date(dpYear, dpMonth + 1, 1); setEditingDate(Object.assign({}, editingDate, { dateStr: d.toISOString().split('T')[0] })); } } }, '›')
+                            ),
+                            h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 } },
+                                weekdays.map(function(w) { return h('div', { style: { textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', padding: '3px 0' } }, w); }),
+                                cells.map(function(d, i) {
+                                    if (d === 0) return h('div', { key: i });
+                                    var selected = dpDate.getDate() === d;
+                                    return h('div', {
+                                        key: i,
+                                        style: { textAlign: 'center', fontSize: 13, fontWeight: selected ? 900 : 600, padding: '5px 2px', borderRadius: 8, cursor: 'pointer', background: selected ? 'var(--primary)' : 'transparent', color: selected ? '#fff' : 'var(--text-body)' },
+                                        onClick: function() { if (editingDate) { var ds = dpYear + '-' + String(dpMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0'); setEditingDate(Object.assign({}, editingDate, { dateStr: ds })); } }
+                                    }, String(d));
+                                })
+                            ),
+                            h('div', { style: { display: 'flex', gap: 6, marginTop: 8, justifyContent: 'center' } },
+                                h('button', { className: 'btn btn-small btn-default', onClick: function() { var d = new Date(); if (editingDate) setEditingDate(Object.assign({}, editingDate, { dateStr: d.toISOString().split('T')[0] })); } }, '📅 今天')
+                            ),
+                            editingDate && editingDate.dateStr ? h('div', { style: { fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, textAlign: 'center' } },
+                                '🌙 ' + getLunarDateStr(new Date(editingDate.dateStr))
+                            ) : null
+                        );
+                    }()
                 ),
                 h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '按农历算？'),
