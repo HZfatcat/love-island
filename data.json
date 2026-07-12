@@ -56,6 +56,42 @@
       "name": "跨年夜",
       "date": "2026-01-01T00:00:00.000Z",
       "color": "pink"
+    },
+    {
+      "icon": "💑",
+      "name": "第一次亲脸",
+      "date": "2026-03-16T04:00:00.000Z",
+      "color": "pink",
+      "isLunar": true,
+      "countdown": "since",
+      "dateType": "custom"
+    },
+    {
+      "icon": "💑",
+      "name": "第一次接吻",
+      "date": "2026-03-23T04:00:00.000Z",
+      "color": "teal",
+      "isLunar": false,
+      "countdown": "since",
+      "dateType": "custom"
+    },
+    {
+      "icon": "💑",
+      "name": "贴贴",
+      "date": "2026-04-06T04:00:00.000Z",
+      "color": "pink",
+      "isLunar": false,
+      "countdown": "since",
+      "dateType": "custom"
+    },
+    {
+      "icon": "💕",
+      "name": "睡觉😴",
+      "date": "2026-04-17T04:00:00.000Z",
+      "color": "pink",
+      "isLunar": false,
+      "countdown": "since",
+      "dateType": "custom"
     }
   ]
 }
