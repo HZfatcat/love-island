@@ -223,6 +223,7 @@
         .action-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px 6px; border-radius: 8px; transition: all 0.2s var(--ease); color: var(--text-secondary); font-family: inherit; opacity: 0; }
         .journal-entry:hover .action-btn { opacity: 1; }
         .wish-item:hover .action-btn { opacity: 1; }
+        .date-item:hover .action-btn { opacity: 1; }
         .action-btn:hover { background: rgba(114,93,66,0.1); color: var(--text-body); }
         .action-btn-danger:hover { background: rgba(224,90,90,0.12); color: var(--error); }
         .name-editable { cursor: pointer; transition: all 0.2s var(--ease); display: inline-flex; align-items: center; gap: 4px; }
@@ -551,6 +552,7 @@
         var _p = useState(null), todayMood = _p[0], setTodayMood = _p[1];
         var _q = useState(''), moodNote = _q[0], setMoodNote = _q[1];
         var _r = useState(''), newMessage = _r[0], setNewMessage = _r[1];
+        var _r2 = useState(true), messageIsSelf = _r2[0], setMessageIsSelf = _r2[1]; // true=自己, false=对方
         var _s = useState(coupleName), editName = _s[0], setEditName = _s[1];
         var _t = useState(loveStartStr.split('T')[0]), editStartDate = _t[0], setEditStartDate = _t[1];
 
@@ -628,13 +630,11 @@
             if (!newMessage.trim()) return;
             var now = new Date();
             var time = formatTime(now);
-            setMessages(messages.concat([{ id: Date.now(), sender: coupleName.split(' & ')[0] || '我', text: newMessage, time: time, isSelf: true }]));
+            var names = coupleName.split(' & ');
+            var sender = messageIsSelf ? (names[0] || '我') : (names[1] || 'TA');
+            setMessages(messages.concat([{ id: Date.now(), sender: sender, text: newMessage, time: time, isSelf: messageIsSelf }]));
             setNewMessage('');
-            var replies = ['你说得对！我也这么觉得 😊', '好呀好呀，都听你的~', '你真好，我好喜欢你 ❤️', '今天也很想你哦 💕', '嗯嗯！我们一起加油！'];
-            setTimeout(function() {
-                var reply = replies[Math.floor(Math.random() * replies.length)];
-                setMessages(function(prev) { return prev.concat([{ id: Date.now() + 1, sender: coupleName.split(' & ')[1] || 'TA', text: reply, time: time, isSelf: false }]); });
-            }, 1500);
+            // 不再自动回复，让用户自己切换身份发送
         }
         function saveMood() {
             if (!todayMood) return;
@@ -824,6 +824,7 @@
 
         // ====== 留言板 ======
         function renderMessages() {
+            var names = coupleName.split(' & ');
             return h('div', null,
                 h('div', { className: 'section-title' }, h('span', null, '💌 甜蜜留言板')),
                 h('div', { className: 'message-board', style: { marginBottom: 20 } },
@@ -836,6 +837,12 @@
                     })
                 ),
                 h('div', { style: { display: 'flex', gap: 12, alignItems: 'center' } },
+                    h('button', {
+                        className: 'btn btn-small ' + (messageIsSelf ? 'btn-primary' : 'btn-default'),
+                        onClick: function() { setMessageIsSelf(!messageIsSelf); },
+                        title: '切换身份',
+                        style: { flexShrink: 0, fontSize: 13, padding: '0 12px', height: 40, borderRadius: 'var(--r-pill)' },
+                    }, messageIsSelf ? (names[0] || '我') + ' 💬' : (names[1] || 'TA') + ' 💬'),
                     h('div', { className: 'input-wrapper input-wrapper-middle', style: { flex: 1 } },
                         h('input', { className: 'input-field', placeholder: '说点什么吧...', value: newMessage, onChange: function(e) { setNewMessage(e.target.value); }, onKeyDown: handleKeyDown })
                     ),
