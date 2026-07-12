@@ -843,7 +843,7 @@
         var _k3e = useState(false), showNextMeetDateEdit = _k3e[0], setShowNextMeetDateEdit = _k3e[1];
         var _k4 = useState(false), showFight = _k4[0], setShowFight = _k4[1];
         var _k5 = useState(false), showEditFight = _k5[0], setShowEditFight = _k5[1];
-        var _l = useState({ title: '', content: '', mood: '😊', color: 'pink' }), newDiary = _l[0], setNewDiary = _l[1];
+        var _l = useState({ title: '', content: '', mood: '😊', color: 'pink', photo: '' }), newDiary = _l[0], setNewDiary = _l[1];
         var _m = useState({ title: '', desc: '' }), newWish = _m[0], setNewWish = _m[1];
         var _n = useState(null), editingDiary = _n[0], setEditingDiary = _n[1];
         var _o = useState(null), editingWish = _o[0], setEditingWish = _o[1];
@@ -884,8 +884,8 @@
             if (!newDiary.title || !newDiary.content) return;
             var today = new Date().toISOString().split('T')[0];
             var names = coupleName.split(' & ');
-            setJournalEntries([{ id: Date.now(), date: today, mood: newDiary.mood, title: newDiary.title, content: newDiary.content, color: newDiary.color, sender: diaryIsSelf ? (names[0] || '我') : (names[1] || 'TA') }].concat(journalEntries));
-            setNewDiary({ title: '', content: '', mood: '😊', color: 'pink' });
+            setJournalEntries([{ id: Date.now(), date: today, mood: newDiary.mood, title: newDiary.title, content: newDiary.content, color: newDiary.color, sender: diaryIsSelf ? (names[0] || '我') : (names[1] || 'TA'), photo: newDiary.photo || '' }].concat(journalEntries));
+            setNewDiary({ title: '', content: '', mood: '😊', color: 'pink', photo: '' });
             setShowDiary(false);
         }
         function saveEditDiary() {
@@ -1040,14 +1040,17 @@
         function handlePhotoUpload(e) {
             var files = e.target.files;
             if (!files || files.length === 0) return;
+            var defaultDate = new Date().toISOString().split('T')[0];
             for (var i = 0; i < files.length; i++) {
                 (function(file) {
                     var reader = new FileReader();
                     reader.onload = function(ev) {
                         var dataUrl = ev.target.result;
-                        // 限制图片大小，超过 200KB 则跳过
-                        if (dataUrl.length > 200 * 1024) return;
-                        setPhotos(function(prev) { return prev.concat([{ id: Date.now() + Math.random(), data: dataUrl, name: file.name, date: new Date().toISOString().split('T')[0] }]); });
+                        if (dataUrl.length > 2 * 1024 * 1024) return;
+                        var title = prompt('照片标题（可选）：', file.name.split('.')[0]) || file.name.split('.')[0];
+                        var desc = prompt('照片描述（可选）：', '') || '';
+                        var date = prompt('拍摄日期（YYYY-MM-DD）：', defaultDate) || defaultDate;
+                        setPhotos(function(prev) { return prev.concat([{ id: Date.now() + Math.random(), data: dataUrl, name: file.name, title: title, desc: desc, date: date }]); });
                     };
                     reader.readAsDataURL(file);
                 })(files[i]);
@@ -1190,7 +1193,10 @@
                                 )
                             ),
                             h('div', { className: 'journal-title' }, entry.title),
-                            h('div', { className: 'journal-text' }, entry.content)
+                            h('div', { className: 'journal-text' }, entry.content),
+                            entry.photo ? h('div', { style: { marginTop: 10, borderRadius: 12, overflow: 'hidden', maxHeight: 200 } },
+                                h('img', { src: entry.photo, style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }, alt: '日记配图' })
+                            ) : null
                         );
                     })
                 )
@@ -1241,14 +1247,10 @@
                     events.push({ date: f.date, type: 'fight', icon: '😤', title: f.title, desc: f.status === 'resolved' ? '已解决 ✓' : (f.status === 'wip' ? '改善中' : '未解决') });
                 });
                 // 照片（模拟日期）
-                GALLERY_ITEMS.forEach(function(item, i) {
-                    var d = new Date(2026, 0, 1);
-                    d.setDate(d.getDate() + i * 15);
-                    events.push({ date: d.toISOString().split('T')[0], type: 'photo', icon: item.emoji, title: item.label, desc: '📸 回忆照片' });
-                });
+                // 移除默认占位图
                 // 上传的照片
                 photos.forEach(function(p) {
-                    events.push({ date: p.date, type: 'photo', icon: '📸', title: p.name || '照片', desc: '📷 ' + p.date });
+                    events.push({ date: p.date, type: 'photo', icon: '📸', title: p.title || p.name || '照片', desc: p.desc || ('📷 ' + p.date) });
                 });
                 // 按日期排序（最新的在前）
                 events.sort(function(a, b) { return a.date < b.date ? 1 : -1; });
@@ -1274,8 +1276,11 @@
                         (function(file) {
                             var reader = new FileReader();
                             reader.onload = function(ev) {
-                                if (ev.target.result.length > 200 * 1024) return;
-                                setPhotos(function(prev) { return prev.concat([{ id: Date.now() + Math.random(), data: ev.target.result, name: file.name, date: new Date().toISOString().split('T')[0] }]); });
+                                if (ev.target.result.length > 2 * 1024 * 1024) return;
+                                var title = prompt('照片标题：', file.name.split('.')[0]) || file.name.split('.')[0];
+                                var desc = prompt('照片描述：', '') || '';
+                                var date = prompt('拍摄日期（YYYY-MM-DD）：', new Date().toISOString().split('T')[0]) || new Date().toISOString().split('T')[0];
+                                setPhotos(function(prev) { return prev.concat([{ id: Date.now() + Math.random(), data: ev.target.result, name: file.name, title: title, desc: desc, date: date }]); });
                             };
                             reader.readAsDataURL(file);
                         })(files[i]);
@@ -1290,22 +1295,15 @@
                 ),
                 galleryView === 'grid'
                     ? h('div', { className: 'gallery-grid' },
-                        // 上传的照片
-                        photos.map(function(photo) {
+                        // 上传的照片（按日期排序）
+                        photos.slice().sort(function(a, b) { return a.date < b.date ? 1 : -1; }).map(function(photo) {
                             return h('div', { key: photo.id, className: 'gallery-item', style: { background: '#fff', overflow: 'hidden', position: 'relative' } },
                                 h('img', { src: photo.data, style: { width: '100%', height: '100%', objectFit: 'cover' }, alt: photo.name }),
-                                h('div', { className: 'gallery-item-label' }, photo.title || photo.name || '照片'),
+                                h('div', { className: 'gallery-item-label' }, (photo.title || photo.name || '照片') + ' · ' + photo.date),
                                 h('div', { style: { position: 'absolute', top: 4, left: 4, display: 'flex', gap: 4 } },
-                                    h('button', { style: { background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: 8, padding: '2px 8px', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }, onClick: function() { var t = prompt('给这张照片取个名字：', photo.title || ''); if (t !== null) setPhotos(photos.map(function(p) { return p.id === photo.id ? Object.assign({}, p, { title: t }) : p; })); }, title: '编辑标题' }, '✏️')
+                                    h('button', { style: { background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: 8, padding: '2px 8px', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }, onClick: function() { var t = prompt('标题：', photo.title || ''); if (t !== null) { var d = prompt('描述：', photo.desc || ''); setPhotos(photos.map(function(p) { return p.id === photo.id ? Object.assign({}, p, { title: t, desc: d || '' }) : p; })); } }, title: '编辑' }, '✏️')
                                 ),
                                 h('button', { style: { position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', fontSize: 12, lineHeight: '24px', textAlign: 'center' }, onClick: function() { deletePhoto(photo.id); }, title: '删除' }, '×')
-                            );
-                        }),
-                        // 预设的emoji模板
-                        GALLERY_ITEMS.map(function(item, i) {
-                            return h('div', { key: 'g' + i, className: 'gallery-item', style: { background: i % 2 === 0 ? 'var(--primary-bg)' : '#fde4e8' } },
-                                h('span', null, item.emoji),
-                                h('div', { className: 'gallery-item-label' }, item.label)
                             );
                         })
                     )
@@ -1783,6 +1781,22 @@
                         h('button', { className: 'btn btn-small ' + (diaryIsSelf ? 'btn-primary-teal' : 'btn-default'), onClick: function() { setDiaryIsSelf(true); } }, coupleName.split(' & ')[0] || '我'),
                         h('button', { className: 'btn btn-small ' + (!diaryIsSelf ? 'btn-primary-teal' : 'btn-default'), onClick: function() { setDiaryIsSelf(false); } }, coupleName.split(' & ')[1] || 'TA')
                     )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 8, display: 'block' } }, '配图（可选）'),
+                    h('input', { type: 'file', accept: 'image/*', style: { display: 'none' }, id: 'diaryPhotoInput', onChange: function(e) {
+                        var file = e.target.files[0];
+                        if (!file) return;
+                        var reader = new FileReader();
+                        reader.onload = function(ev) {
+                            if (ev.target.result.length > 2 * 1024 * 1024) return;
+                            setNewDiary(Object.assign({}, newDiary, { photo: ev.target.result }));
+                        };
+                        reader.readAsDataURL(file);
+                        e.target.value = '';
+                    } }),
+                    h('button', { className: 'btn btn-small btn-default', onClick: function() { document.getElementById('diaryPhotoInput').click(); } }, newDiary.photo ? '📷 已选择' : '📷 添加照片'),
+                    newDiary.photo ? h('button', { className: 'btn btn-small btn-default', onClick: function() { setNewDiary(Object.assign({}, newDiary, { photo: '' })); }, style: { marginLeft: 4 } }, '✕ 移除') : null
                 )
             ),
             h(Modal, { show: showWish, title: '✨ 新增心愿', onClose: function() { setShowWish(false); }, onConfirm: addWish, confirmText: '添加 🌟', confirmClass: 'btn-primary-pink' },
