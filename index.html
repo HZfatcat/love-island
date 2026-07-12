@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>💕 Love Island - 我们的甜蜜小岛</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        :root {
+            --primary: #19c8b9;
+            --primary-hover: #3dd4c6;
+            --primary-active: #11a89b;
+            --primary-bg: #e6f9f6;
+            --text: #794f27;
+            --text-body: #725d42;
+            --text-secondary: #9f927d;
+            --text-muted: #8a7b66;
+            --text-disabled: #c4b89e;
+            --bg: #f8f8f0;
+            --bg-content: rgb(247, 243, 223);
+            --bg-disabled: #f0ece2;
+            --border: #c4b89e;
+            --border-hover: #a89878;
+            --border-strong: #9f927d;
+            --success: #6fba2c;
+            --success-active: #5a9e1e;
+            --warning: #f5c31c;
+            --warning-active: #dba90e;
+            --error: #e05a5a;
+            --error-active: #c94444;
+            --focus-yellow: #ffcc00;
+            --focus-yellow-d: #e0b800;
+            --shadow-btn: #bdaea0;
+            --shadow-input: #d4c9b4;
+            --r-sm: 12px;
+            --r-base: 18px;
+            --r-lg: 24px;
+            --r-pill: 50px;
+            --ease: cubic-bezier(0.4, 0, 0.2, 1);
+            --pink: #f8a6b2;
+            --purple: #b77dee;
+            --app-blue: #889df0;
+            --app-yellow: #f7cd67;
+            --app-teal: #82d5bb;
+            --app-green: #8ac68a;
+            --app-orange: #e59266;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', 'Noto Sans SC', -apple-system, 'PingFang SC', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            background: var(--bg);
+            color: var(--text-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+
+        /* Page background decoration */
+        .page-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(25, 200, 185, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(248, 166, 178, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(247, 243, 223, 0.3) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Floating hearts decoration */
+        .floating-hearts {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .heart-float {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.15;
+            animation: heartFloat 8s ease-in-out infinite;
+        }
+        .heart-float:nth-child(1) { left: 5%; top: 20%; animation-delay: 0s; font-size: 16px; }
+        .heart-float:nth-child(2) { left: 15%; top: 60%; animation-delay: 2s; font-size: 24px; }
+        .heart-float:nth-child(3) { left: 85%; top: 30%; animation-delay: 4s; font-size: 18px; }
+        .heart-float:nth-child(4) { left: 75%; top: 70%; animation-delay: 1s; font-size: 22px; }
+        .heart-float:nth-child(5) { left: 50%; top: 10%; animation-delay: 3s; font-size: 14px; }
+        .heart-float:nth-child(6) { left: 30%; top: 80%; animation-delay: 5s; font-size: 20px; }
+        .heart-float:nth-child(7) { left: 60%; top: 40%; animation-delay: 6s; font-size: 16px; }
+        .heart-float:nth-child(8) { left: 90%; top: 15%; animation-delay: 2.5s; font-size: 12px; }
+
+        @keyframes heartFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.12; }
+            25% { transform: translateY(-20px) rotate(5deg); opacity: 0.2; }
+            50% { transform: translateY(-10px) rotate(-3deg); opacity: 0.15; }
+            75% { transform: translateY(-25px) rotate(4deg); opacity: 0.18; }
+        }
+
+        /* App Container */
+        .app-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* ========== COMPONENTS ========== */
+
+        /* Button */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            line-height: 1;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.25s var(--ease);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .btn:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none !important;
+        }
+        .btn-small { height: 32px; padding: 0 16px; font-size: 12px; border-radius: 16px; }
+        .btn-middle { height: 45px; padding: 0 20px; font-size: 14px; border-radius: var(--r-pill); }
+        .btn-large { height: 48px; padding: 0 32px; font-size: 16px; border-radius: var(--r-lg); }
+
+        .btn-primary {
+            background: var(--bg);
+            color: var(--text);
+            border-color: var(--bg);
+            box-shadow: 0 5px 0 0 var(--shadow-btn);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 6px 0 0 var(--shadow-btn);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            box-shadow: 0 1px 0 0 var(--shadow-btn);
+            transform: translateY(2px);
+        }
+
+        .btn-primary-pink {
+            background: var(--pink);
+            color: #fff;
+            border-color: var(--pink);
+            box-shadow: 0 5px 0 0 #d47a8a;
+        }
+        .btn-primary-pink:hover {
+            box-shadow: 0 6px 0 0 #d47a8a;
+            transform: translateY(-1px);
+        }
+        .btn-primary-pink:active {
+            box-shadow: 0 1px 0 0 #d47a8a;
+            transform: translateY(2px);
+        }
+
+        .btn-primary-teal {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 5px 0 0 #0ea090;
+        }
+        .btn-primary-teal:hover {
+            box-shadow: 0 6px 0 0 #0ea090;
+            transform: translateY(-1px);
+        }
+        .btn-primary-teal:active {
+            box-shadow: 0 1px 0 0 #0ea090;
+            transform: translateY(2px);
+        }
+
+        .btn-default {
+            background: var(--bg);
+            color: var(--text-body);
+            border: 2px solid var(--border-strong);
+            box-shadow: 0 2px 4px 0 rgba(61, 52, 40, 0.06);
+        }
+        .btn-default:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 3px 10px 0 rgba(61, 52, 40, 0.10);
+            transform: translateY(-1px);
+        }
+        .btn-default:active {
+            color: var(--primary-active);
+            border-color: var(--primary-active);
+            transform: translateY(0);
+            box-shadow: 0 2px 4px 0 rgba(61, 52, 40, 0.06);
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-content);
+            border-radius: 20px;
+            padding: 20px 24px;
+            color: var(--text-body);
+            transition: all 0.3s var(--ease);
+            cursor: pointer;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .card-pattern-default {
+            background:
+                radial-gradient(circle, rgba(25, 200, 185, 0.12) 1.5px, transparent 1.5px) 0 0 / 28px 28px,
+                radial-gradient(circle, rgba(25, 200, 185, 0.08) 1px, transparent 1px) 7px 7px / 14px 14px,
+                var(--bg-content);
+            border: 1.5px solid rgba(25, 200, 185, 0.3);
+        }
+        .card-pattern-pink {
+            background:
+                radial-gradient(circle, rgba(248, 166, 178, 0.18) 1.5px, transparent 1.5px) 0 0 / 28px 28px,
+                radial-gradient(circle, rgba(255, 200, 210, 0.12) 1px, transparent 1px) 7px 7px / 14px 14px,
+                #fde4e8;
+            border: 1.5px solid var(--pink);
+            color: #a85565;
+        }
+        .card-pattern-blue {
+            background:
+                radial-gradient(circle, rgba(136, 157, 240, 0.18) 1.5px, transparent 1.5px) 0 0 / 28px 28px,
+                radial-gradient(circle, rgba(180, 200, 255, 0.12) 1px, transparent 1px) 7px 7px / 14px 14px,
+                #e8edfe;
+            border: 1.5px solid var(--app-blue);
+            color: #4a5a9e;
+        }
+        .card-pattern-teal {
+            background:
+                radial-gradient(circle, rgba(130, 213, 187, 0.18) 1.5px, transparent 1.5px) 0 0 / 28px 28px,
+                radial-gradient(circle, rgba(160, 230, 210, 0.12) 1px, transparent 1px) 7px 7px / 14px 14px,
+                #e0f5ed;
+            border: 1.5px solid var(--app-teal);
+            color: #3a8a72;
+        }
+        .card-pattern-yellow {
+            background:
+                radial-gradient(circle, rgba(247, 205, 103, 0.18) 1.5px, transparent 1.5px) 0 0 / 28px 28px,
+                radial-gradient(circle, rgba(255, 220, 140, 0.12) 1px, transparent 1px) 7px 7px / 14px 14px,
+                #fef5e0;
+            border: 1.5px solid var(--app-yellow);
+            color: #8a6a20;
+        }
+        .card-pattern-purple {
+            background:
+                radial-gradient(circle, rgba(183, 125, 238, 0.18) 1.5px, transparent 1.5px) 0 0 / 28px 28px,
+                radial-gradient(circle, rgba(210, 170, 255, 0.12) 1px, transparent 1px) 7px 7px / 14px 14px,
+                #f0e8fe;
+            border: 1.5px solid var(--purple);
+            color: #6a3a9e;
+        }
+        .card-solid-pink { background: var(--pink); color: #fff; border: none; }
+        .card-solid-teal { background: var(--app-teal); color: #fff; border: none; }
+        .card-solid-blue { background: var(--app-blue); color: #fff; border: none; }
+        .card-solid-yellow { background: var(--app-yellow); color: var(--text); border: none; }
+        .card-solid-primary { background: var(--primary); color: #fff; border: none; }
+
+        /* Input */
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: var(--bg-content);
+            border: 2px solid var(--border);
+            border-radius: var(--r-pill);
+            transition: all 0.25s var(--ease);
+        }
+        .input-wrapper:hover { border-color: var(--border-hover); }
+        .input-wrapper:focus-within {
+            border-color: var(--focus-yellow);
+            box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.15);
+        }
+        .input-wrapper-small { height: 32px; padding: 0 14px; font-size: 12px; border-radius: 40px; }
+        .input-wrapper-middle { height: 40px; padding: 0 18px; font-size: 14px; border-radius: var(--r-pill); }
+        .input-wrapper-large { height: 48px; padding: 0 22px; font-size: 16px; border-radius: var(--r-pill); }
+
+        .input-field {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: inherit;
+            color: var(--text-body);
+            font-weight: 500;
+            letter-spacing: 0.01em;
+        }
+        .input-field::placeholder {
+            color: var(--border);
+            font-weight: 400;
+        }
+        .input-field:disabled {
+            background: var(--bg-disabled);
+            color: var(--border);
+            opacity: 0.6;
+        }
+
+        /* Textarea */
+        .textarea-wrapper {
+            background: var(--bg-content);
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            padding: 14px 18px;
+            transition: all 0.25s var(--ease);
+        }
+        .textarea-wrapper:hover { border-color: var(--border-hover); }
+        .textarea-wrapper:focus-within {
+            border-color: var(--focus-yellow);
+            box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.15);
+        }
+        .textarea-field {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text-body);
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.6;
+        }
+        .textarea-field::placeholder {
+            color: var(--border);
+            font-weight: 400;
+        }
+
+        /* Section Title */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.02em;
+            margin-bottom: 24px;
+        }
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, var(--border), transparent);
+        }
+
+        /* Tab */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-disabled);
+            border-radius: var(--r-pill);
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border: none;
+            border-radius: var(--r-pill);
+            cursor: pointer;
+            background: transparent;
+            transition: all 0.25s var(--ease);
+            font-family: inherit;
+            letter-spacing: 0.02em;
+            text-align: center;
+        }
+        .tab:hover { color: var(--text-body); }
+        .tab-active {
+            background: var(--bg);
+            color: var(--text);
+            box-shadow: 0 2px 8px rgba(61, 52, 40, 0.08);
+        }
+
+        /* Stats / Countdown */
+        .countdown-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            text-align: center;
+        }
+        .countdown-item {
+            background: var(--bg-content);
+            border-radius: 18px;
+            padding: 16px 8px;
+            border: 2px solid rgba(25, 200, 185, 0.2);
+        }
+        .countdown-number {
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--primary);
+            line-height: 1;
+            letter-spacing: 2px;
+        }
+        .countdown-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-top: 4px;
+            letter-spacing: 0.02em;
+        }
+
+        /* Mood Selector */
+        .mood-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+        .mood-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 8px;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            background: var(--bg);
+            cursor: pointer;
+            transition: all 0.25s var(--ease);
+            font-family: inherit;
+        }
+        .mood-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .mood-btn-active {
+            border-color: var(--primary);
+            background: var(--primary-bg);
+            box-shadow: 0 0 0 3px rgba(25, 200, 185, 0.15);
+        }
+        .mood-emoji { font-size: 28px; }
+        .mood-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+
+        /* Journal Entry */
+        .journal-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .journal-entry {
+            background: var(--bg-content);
+            border-radius: 18px;
+            padding: 20px 24px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s var(--ease);
+        }
+        .journal-entry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(61, 52, 40, 0.08);
+        }
+        .journal-entry-pink { border-left-color: var(--pink); }
+        .journal-entry-blue { border-left-color: var(--app-blue); }
+        .journal-entry-yellow { border-left-color: var(--app-yellow); }
+        .journal-entry-teal { border-left-color: var(--app-teal); }
+        .journal-entry-purple { border-left-color: var(--purple); }
+
+        .journal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .journal-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .journal-mood {
+            font-size: 18px;
+        }
+        .journal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .journal-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-body);
+        }
+
+        /* Wish List */
+        .wish-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .wish-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--bg-content);
+            border-radius: 16px;
+            padding: 14px 20px;
+            transition: all 0.3s var(--ease);
+        }
+        .wish-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 12px rgba(61, 52, 40, 0.06);
+        }
+        .wish-checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            border: 2.5px solid var(--border);
+            background: var(--bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s var(--ease);
+            flex-shrink: 0;
+        }
+        .wish-checkbox:hover { border-color: var(--primary); }
+        .wish-checkbox-checked {
+            background: var(--primary);
+            border-color: var(--primary-active);
+        }
+        .wish-checkbox-checked::after {
+            content: '✓';
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .wish-info { flex: 1; }
+        .wish-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .wish-title-done {
+            text-decoration: line-through;
+            color: var(--text-disabled);
+        }
+        .wish-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        .wish-heart {
+            font-size: 18px;
+            opacity: 0.5;
+            transition: all 0.3s var(--ease);
+        }
+        .wish-heart-liked { opacity: 1; animation: heartBeat 0.3s var(--ease); }
+
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* Photo Gallery */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        .gallery-item {
+            background: var(--bg-content);
+            border-radius: 18px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            border: 2px solid transparent;
+            transition: all 0.3s var(--ease);
+            position: relative;
+        }
+        .gallery-item:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            box-shadow: 0 6px 20px rgba(61, 52, 40, 0.1);
+        }
+        .gallery-item-label {
+            position: absolute;
+            bottom: 0;
+            left: 0; right: 0;
+            padding: 8px 12px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.3));
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Anniversary Card */
+        .anniversary-hero {
+            background: linear-gradient(135deg, #fde4e8 0%, var(--bg-content) 50%, #e0f5ed 100%);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            border: 2px solid rgba(248, 166, 178, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .anniversary-hero::before {
+            content: '💕';
+            position: absolute;
+            top: -10px; left: -10px;
+            font-size: 60px;
+            opacity: 0.1;
+            transform: rotate(-15deg);
+        }
+        .anniversary-hero::after {
+            content: '💕';
+            position: absolute;
+            bottom: -10px; right: -10px;
+            font-size: 60px;
+            opacity: 0.1;
+            transform: rotate(15deg);
+        }
+        .anniversary-hearts {
+            font-size: 48px;
+            margin-bottom: 12px;
+            animation: floatHearts 2s ease-in-out infinite;
+        }
+        @keyframes floatHearts {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .anniversary-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .anniversary-sub {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        .anniversary-days {
+            font-size: 64px;
+            font-weight: 900;
+            color: var(--primary);
+            letter-spacing: 4px;
+            line-height: 1;
+        }
+        .anniversary-days-label {
+            font-size: 16px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Message Board */
+        .message-board {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .message-bubble {
+            background: var(--bg-content);
+            border-radius: 18px;
+            padding: 16px 20px;
+            max-width: 80%;
+            position: relative;
+        }
+        .message-bubble-self {
+            align-self: flex-end;
+            background: var(--primary-bg);
+            border: 1.5px solid rgba(25, 200, 185, 0.2);
+        }
+        .message-bubble-other {
+            align-self: flex-start;
+            border: 1.5px solid rgba(248, 166, 178, 0.2);
+        }
+        .message-sender {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .message-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .message-time {
+            font-size: 11px;
+            color: var(--text-disabled);
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        /* Special Dates */
+        .date-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .date-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--bg-content);
+            border-radius: 16px;
+            padding: 14px 20px;
+            transition: all 0.3s var(--ease);
+        }
+        .date-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 12px rgba(61, 52, 40, 0.06);
+        }
+        .date-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .date-icon-pink { background: #fde4e8; }
+        .date-icon-teal { background: #e0f5ed; }
+        .date-icon-blue { background: #e8edfe; }
+        .date-icon-yellow { background: #fef5e0; }
+        .date-icon-purple { background: #f0e8fe; }
+        .date-info { flex: 1; }
+        .date-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .date-value {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .date-days {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Nav Bar */
+        .nav-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            padding: 6px;
+            background: var(--bg-content);
+            border-radius: 18px;
+            border: 2px solid rgba(25, 200, 185, 0.15);
+            flex-wrap: wrap;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            background: transparent;
+            transition: all 0.25s var(--ease);
+            font-family: inherit;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-btn:hover {
+            background: rgba(25, 200, 185, 0.08);
+            color: var(--text-body);
+        }
+        .nav-btn-active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 3px 0 0 #0ea090;
+        }
+        .nav-btn-active:hover {
+            background: var(--primary-hover);
+            color: #fff;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(40, 30, 20, 0.45);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s var(--ease);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: var(--bg-content);
+            border-radius: 24px;
+            padding: 48px 48px 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(61, 52, 40, 0.15);
+            clip-path: url(#animal-modal-clip);
+        }
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* Header */
+        .site-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            margin-bottom: 8px;
+        }
+        .site-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .site-logo-icon {
+            font-size: 32px;
+        }
+        .site-logo-text {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: 0.02em;
+        }
+        .site-logo-sub {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .header-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-stat {
+            text-align: center;
+        }
+        .header-stat-num {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--primary);
+        }
+        .header-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container { padding: 12px; }
+            .site-header { flex-direction: column; gap: 12px; }
+            .nav-bar { justify-content: center; }
+            .nav-btn { padding: 8px 14px; font-size: 13px; }
+            .countdown-grid { grid-template-columns: repeat(2, 1fr); }
+            .anniversary-hero { padding: 24px 16px; }
+            .anniversary-days { font-size: 42px; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+            .modal-content { padding: 32px 24px 24px; margin: 16px; }
+            .message-bubble { max-width: 90%; }
+            .section-title { font-size: 20px; }
+            .mood-grid { grid-template-columns: repeat(5, 1fr); }
+            .mood-btn { padding: 8px 4px; }
+            .mood-emoji { font-size: 22px; }
+            .mood-label { font-size: 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .countdown-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .countdown-number { font-size: 28px; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .header-stats { gap: 12px; }
+            .anniversary-days { font-size: 36px; }
+        }
+    </style>
+</head>
+<body>
+    <svg style="position:absolute;width:0;height:0" aria-hidden>
+        <defs>
+            <clipPath id="animal-modal-clip" clipPathUnits="objectBoundingBox">
+                <path d="M0.501,0.005 L0.501,0.005 L0.523,0.005 L0.549,0.006 C0.704,0.01,0.796,0.017,0.825,0.027 L0.827,0.028 C0.872,0.045,0.939,0.044,0.978,0.17 C1,0.254,1,0.365,0.99,0.505 L0.988,0.513 C0.979,0.558,0.971,0.598,0.965,0.633 C0.956,0.689,0.979,0.77,0.964,0.865 C0.953,0.928,0.921,0.966,0.869,0.979 C0.821,0.986,0.773,0.992,0.726,0.995 L0.712,0.996 L0.694,0.997 C0.648,1,0.586,1,0.507,1 L0.501,1 L0.464,1 C0.385,1,0.325,0.998,0.283,0.995 C0.234,0.992,0.184,0.987,0.133,0.979 C0.081,0.966,0.05,0.928,0.039,0.865 C0.023,0.77,0.047,0.689,0.037,0.633 C0.031,0.595,0.023,0.552,0.013,0.505 C-0.006,0.365,-0.002,0.254,0.024,0.17 C0.064,0.045,0.13,0.045,0.174,0.028 L0.175,0.028 C0.204,0.017,0.303,0.009,0.474,0.005 L0.501,0.005" />
+            </clipPath>
+        </defs>
+    </svg>
+
+    <div class="page-bg"></div>
+    <div class="floating-hearts">
+        <span class="heart-float">💕</span>
+        <span class="heart-float">💗</span>
+        <span class="heart-float">💖</span>
+        <span class="heart-float">💕</span>
+        <span class="heart-float">💗</span>
+        <span class="heart-float">💖</span>
+        <span class="heart-float">💕</span>
+        <span class="heart-float">💗</span>
+    </div>
+
+    <div id="root"></div>
+
+    <script type="text/babel" data-presets="react,typescript">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // ========== DATA ==========
+        const LOVE_START = new Date('2024-02-14T00:00:00');
+        const COUPLE_NAME = '小可爱 & 大笨蛋';
+        const COUPLE_SHORT = ['小可爱', '大笨蛋'];
+
+        // ========== HOOKS ==========
+        function useCountdown(targetDate) {
+            const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+            const [totalDays, setTotalDays] = useState(0);
+
+            useEffect(() => {
+                function calc() {
+                    const now = new Date();
+                    const diff = now - targetDate;
+                    const total = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    setTotalDays(total);
+
+                    const nextAnniversary = new Date(targetDate);
+                    nextAnniversary.setFullYear(now.getFullYear());
+                    if (nextAnniversary < now) nextAnniversary.setFullYear(now.getFullYear() + 1);
+                    const nextDiff = nextAnniversary - now;
+                    const d = Math.floor(nextDiff / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((nextDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((nextDiff % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((nextDiff % (1000 * 60)) / 1000);
+                    setTimeLeft({ days: d, hours: h, minutes: m, seconds: s });
+                }
+                calc();
+                const timer = setInterval(calc, 1000);
+                return () => clearInterval(timer);
+            }, [targetDate]);
+
+            return { ...timeLeft, totalDays };
+        }
+
+        // ========== APP ==========
+        function App() {
+            const [activeTab, setActiveTab] = useState('home');
+            const { days, hours, minutes, seconds, totalDays } = useCountdown(LOVE_START);
+
+            const [journalEntries, setJournalEntries] = useState([
+                { id: 1, date: '2024-06-15', mood: '😊', title: '第一次一起看海', content: '今天我们一起去了海边，你靠在我肩膀上看日落，那一刻我觉得全世界都是粉色的。海风很温柔，你也是。', color: 'pink' },
+                { id: 2, date: '2024-08-20', mood: '🥰', title: '你做的小蛋糕超好吃', content: '虽然烤焦了一点点，但这是世界上最好吃的蛋糕！和你一起在厨房手忙脚乱的样子，我一辈子都忘不了。', color: 'teal' },
+                { id: 3, date: '2024-10-01', mood: '😍', title: '国庆旅行——最美的风景是你', content: '七天的旅行，去了很多地方，但最美的风景一直在我身边。和你一起迷路、一起找吃的、一起看星星，每一天都像在梦里。', color: 'blue' },
+                { id: 4, date: '2024-12-24', mood: '🎄', title: '我们的第一个平安夜', content: '你送我的围巾很暖，但你的拥抱更暖。圣诞树的灯光照在你脸上，我好想时间就停在那一刻。 Merry Christmas, my love.', color: 'purple' },
+                { id: 5, date: '2025-02-14', mood: '💕', title: '一周年快乐！', content: '365天，说长不长，说短不短。但和你在一起的每一天，都让我觉得无比幸运。谢谢你出现在我的生命里，未来还有很多个周年要一起过。', color: 'yellow' },
+            ]);
+
+            const [wishes, setWishes] = useState([
+                { id: 1, title: '一起去日本看樱花', desc: '在樱花树下拍一张合照', done: false, liked: true },
+                { id: 2, title: '学做一道对方最喜欢的菜', desc: '亲手做一顿浪漫晚餐', done: false, liked: true },
+                { id: 3, title: '一起去迪士尼', desc: '看烟花的时候拥抱对方', done: true, liked: true },
+                { id: 4, title: '一起养一只猫', desc: '取名叫做「小团子」', done: false, liked: false },
+                { id: 5, title: '写100封情书', desc: '已经写了23封，继续加油！', done: false, liked: true },
+            ]);
+
+            const [messages, setMessages] = useState([
+                { id: 1, sender: '小可爱', text: '早安呀～今天也要开开心心的！', time: '08:30', isSelf: true },
+                { id: 2, sender: '大笨蛋', text: '早安！今天梦到你了，所以醒来特别开心🥰', time: '08:35', isSelf: false },
+                { id: 3, sender: '小可爱', text: '今晚我们一起去看星星吧？天气预报说天气很好呢', time: '14:12', isSelf: true },
+                { id: 4, sender: '大笨蛋', text: '好呀好呀！我带上我新买的小毯子，给你披着~', time: '14:15', isSelf: false },
+                { id: 5, sender: '小可爱', text: '你真好 ❤️ 那晚上见！', time: '14:16', isSelf: true },
+            ]);
+
+            const [newMessage, setNewMessage] = useState('');
+            const [showDiaryModal, setShowDiaryModal] = useState(false);
+            const [showWishModal, setShowWishModal] = useState(false);
+            const [showMessageModal, setShowMessageModal] = useState(false);
+            const [newDiary, setNewDiary] = useState({ title: '', content: '', mood: '😊', color: 'pink' });
+            const [newWish, setNewWish] = useState({ title: '', desc: '' });
+            const [todayMood, setTodayMood] = useState(null);
+            const [moodNote, setMoodNote] = useState('');
+
+            // Special Dates
+            const specialDates = [
+                { icon: '💕', name: '在一起的日子', date: LOVE_START, color: 'pink' },
+                { icon: '🎂', name: '她的生日', date: new Date('2025-08-15'), color: 'teal' },
+                { icon: '🎂', name: '他的生日', date: new Date('2025-11-20'), color: 'blue' },
+                { icon: '💍', name: '求婚纪念日', date: new Date('2025-06-01'), color: 'purple' },
+                { icon: '🎄', name: '圣诞节', date: new Date('2025-12-25'), color: 'yellow' },
+                { icon: '🎆', name: '跨年夜', date: new Date('2026-01-01'), color: 'pink' },
+            ];
+
+            const getDaysUntil = (date) => {
+                const now = new Date();
+                const target = new Date(date);
+                target.setFullYear(now.getFullYear());
+                if (target < now) target.setFullYear(now.getFullYear() + 1);
+                return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+            };
+
+            const toggleWish = (id) => {
+                setWishes(wishes.map(w => w.id === id ? { ...w, done: !w.done } : w));
+            };
+            const toggleLike = (id) => {
+                setWishes(wishes.map(w => w.id === id ? { ...w, liked: !w.liked } : w));
+            };
+
+            const addDiary = () => {
+                if (!newDiary.title || !newDiary.content) return;
+                const today = new Date().toISOString().split('T')[0];
+                setJournalEntries([{
+                    id: Date.now(),
+                    date: today,
+                    mood: newDiary.mood,
+                    title: newDiary.title,
+                    content: newDiary.content,
+                    color: newDiary.color,
+                }, ...journalEntries]);
+                setNewDiary({ title: '', content: '', mood: '😊', color: 'pink' });
+                setShowDiaryModal(false);
+            };
+
+            const addWish = () => {
+                if (!newWish.title) return;
+                setWishes([...wishes, { id: Date.now(), title: newWish.title, desc: newWish.desc, done: false, liked: false }]);
+                setNewWish({ title: '', desc: '' });
+                setShowWishModal(false);
+            };
+
+            const sendMessage = () => {
+                if (!newMessage.trim()) return;
+                const now = new Date();
+                const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                setMessages([...messages, { id: Date.now(), sender: COUPLE_SHORT[0], text: newMessage, time, isSelf: true }]);
+                setNewMessage('');
+                setTimeout(() => {
+                    const replies = [
+                        '你说得对！我也这么觉得 😊',
+                        '好呀好呀，都听你的~',
+                        '你真好，我好喜欢你 ❤️',
+                        '今天也很想你哦 💕',
+                        '嗯嗯！我们一起加油！',
+                    ];
+                    const reply = replies[Math.floor(Math.random() * replies.length)];
+                    setMessages(prev => [...prev, { id: Date.now() + 1, sender: COUPLE_SHORT[1], text: reply, time, isSelf: false }]);
+                }, 1500);
+            };
+
+            const handleMoodSelect = (mood) => {
+                setTodayMood(mood);
+            };
+
+            const saveMood = () => {
+                if (!todayMood) return;
+                const today = new Date().toISOString().split('T')[0];
+                setJournalEntries([{
+                    id: Date.now(),
+                    date: today,
+                    mood: todayMood,
+                    title: '今日心情：' + (todayMood === '😊' ? '开心' : todayMood === '🥰' ? '甜蜜' : todayMood === '😍' ? '超爱' : todayMood === '😌' ? '平静' : '想你'),
+                    content: moodNote || '今天的心情记录。和你在一起的日子，每一天都很特别。',
+                    color: 'teal',
+                }, ...journalEntries]);
+                setTodayMood(null);
+                setMoodNote('');
+            };
+
+            const getMoodEmoji = (mood) => {
+                const map = { '😊': '😊', '🥰': '🥰', '😍': '😍', '😌': '😌', '🥺': '🥺' };
+                return map[mood] || '😊';
+            };
+
+            const bgPatterns = {
+                home: 'pattern-default',
+                diary: 'pattern-pink',
+                wishes: 'pattern-teal',
+                gallery: 'pattern-blue',
+                dates: 'pattern-yellow',
+                messages: 'pattern-purple',
+            };
+
+            // ========== RENDER ==========
+            return (
+                <div className="app-container">
+                    {/* Header */}
+                    <header className="site-header">
+                        <div className="site-logo">
+                            <span className="site-logo-icon">🏝️</span>
+                            <div>
+                                <div className="site-logo-text">Love Island</div>
+                                <div className="site-logo-sub">{COUPLE_NAME} · 甜蜜小岛</div>
+                            </div>
+                        </div>
+                        <div className="header-stats">
+                            <div className="header-stat">
+                                <div className="header-stat-num">{totalDays}</div>
+                                <div className="header-stat-label">在一起的天数 ❤️</div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Nav */}
+                    <nav className="nav-bar">
+                        {[
+                            { key: 'home', icon: '🏠', label: '首页' },
+                            { key: 'diary', icon: '📖', label: '恋爱日记' },
+                            { key: 'wishes', icon: '🌟', label: '心愿清单' },
+                            { key: 'gallery', icon: '📸', label: '回忆相册' },
+                            { key: 'dates', icon: '📅', label: '纪念日' },
+                            { key: 'messages', icon: '💌', label: '留言板' },
+                        ].map(nav => (
+                            <button
+                                key={nav.key}
+                                className={`nav-btn ${activeTab === nav.key ? 'nav-btn-active' : ''}`}
+                                onClick={() => setActiveTab(nav.key)}
+                            >
+                                <span>{nav.icon}</span>
+                                <span>{nav.label}</span>
+                            </button>
+                        ))}
+                    </nav>
+
+                    {/* ===== HOME ===== */}
+                    {activeTab === 'home' && (
+                        <div>
+                            {/* Anniversary Hero */}
+                            <div className="anniversary-hero" style={{ marginBottom: 28 }}>
+                                <div className="anniversary-hearts">💕💗💖</div>
+                                <div className="anniversary-title">
+                                    {COUPLE_NAME} 的爱情小岛
+                                </div>
+                                <div className="anniversary-sub">
+                                    从 {LOVE_START.toLocaleDateString('zh-CN')} 开始，我们携手走过了
+                                </div>
+                                <div className="anniversary-days">{totalDays}</div>
+                                <div className="anniversary-days-label">天的甜蜜旅程 💕</div>
+                            </div>
+
+                            {/* Countdown to next anniversary */}
+                            <div className="card card-pattern-default" style={{ marginBottom: 24, cursor: 'default' }}>
+                                <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 16, textAlign: 'center' }}>
+                                    🌟 距离下一个纪念日还有
+                                </h3>
+                                <div className="countdown-grid">
+                                    <div className="countdown-item">
+                                        <div className="countdown-number">{days}</div>
+                                        <div className="countdown-label">天</div>
+                                    </div>
+                                    <div className="countdown-item">
+                                        <div className="countdown-number">{hours}</div>
+                                        <div className="countdown-label">小时</div>
+                                    </div>
+                                    <div className="countdown-item">
+                                        <div className="countdown-number">{minutes}</div>
+                                        <div className="countdown-label">分钟</div>
+                                    </div>
+                                    <div className="countdown-item">
+                                        <div className="countdown-number">{seconds}</div>
+                                        <div className="countdown-label">秒</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Today's Mood */}
+                            <div className="card card-pattern-pink" style={{ marginBottom: 24, cursor: 'default' }}>
+                                <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 16, textAlign: 'center' }}>
+                                    🌸 今天的心情
+                                </h3>
+                                {!todayMood ? (
+                                    <div>
+                                        <div className="mood-grid">
+                                            {[
+                                                { emoji: '😊', label: '开心' },
+                                                { emoji: '🥰', label: '甜蜜' },
+                                                { emoji: '😍', label: '超爱' },
+                                                { emoji: '😌', label: '平静' },
+                                                { emoji: '🥺', label: '想你' },
+                                            ].map(m => (
+                                                <button
+                                                    key={m.emoji}
+                                                    className={`mood-btn ${todayMood === m.emoji ? 'mood-btn-active' : ''}`}
+                                                    onClick={() => handleMoodSelect(m.emoji)}
+                                                >
+                                                    <span className="mood-emoji">{m.emoji}</span>
+                                                    <span className="mood-label">{m.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {todayMood && (
+                                            <div style={{ marginTop: 12 }}>
+                                                <div className="textarea-wrapper">
+                                                    <textarea
+                                                        className="textarea-field"
+                                                        placeholder="今天想对他说什么？"
+                                                        value={moodNote}
+                                                        onChange={e => setMoodNote(e.target.value)}
+                                                        style={{ minHeight: 60 }}
+                                                    />
+                                                </div>
+                                                <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+                                                    <button className="btn btn-middle btn-primary-teal" onClick={saveMood}>
+                                                        💾 记录心情
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: 14 }}>
+                                        今天的心情已记录 ~ 明天再来呀 💕
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Quick Stats */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+                                <div className="card card-solid-teal" style={{ textAlign: 'center', cursor: 'default' }}>
+                                    <div style={{ fontSize: 36, marginBottom: 8 }}>📖</div>
+                                    <div style={{ fontSize: 28, fontWeight: 900 }}>{journalEntries.length}</div>
+                                    <div style={{ fontSize: 14, fontWeight: 600, opacity: 0.9 }}>篇恋爱日记</div>
+                                </div>
+                                <div className="card card-solid-pink" style={{ textAlign: 'center', cursor: 'default' }}>
+                                    <div style={{ fontSize: 36, marginBottom: 8 }}>🌟</div>
+                                    <div style={{ fontSize: 28, fontWeight: 900 }}>{wishes.filter(w => w.done).length}/{wishes.length}</div>
+                                    <div style={{ fontSize: 14, fontWeight: 600, opacity: 0.9 }}>心愿完成</div>
+                                </div>
+                                <div className="card card-solid-blue" style={{ textAlign: 'center', cursor: 'default' }}>
+                                    <div style={{ fontSize: 36, marginBottom: 8 }}>💌</div>
+                                    <div style={{ fontSize: 28, fontWeight: 900 }}>{messages.length}</div>
+                                    <div style={{ fontSize: 14, fontWeight: 600, opacity: 0.9 }}>条甜蜜留言</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ===== DIARY ===== */}
+                    {activeTab === 'diary' && (
+                        <div>
+                            <div className="section-title">
+                                <span>📖 恋爱日记</span>
+                            </div>
+                            <div style={{ marginBottom: 20 }}>
+                                <button className="btn btn-middle btn-primary-teal" onClick={() => setShowDiaryModal(true)}>
+                                    ✏️ 写日记
+                                </button>
+                            </div>
+                            <div className="journal-list">
+                                {journalEntries.map(entry => (
+                                    <div key={entry.id} className={`journal-entry journal-entry-${entry.color}`}>
+                                        <div className="journal-header">
+                                            <span className="journal-date">{entry.date}</span>
+                                            <span className="journal-mood">{entry.mood}</span>
+                                        </div>
+                                        <div className="journal-title">{entry.title}</div>
+                                        <div className="journal-text">{entry.content}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ===== WISHES ===== */}
+                    {activeTab === 'wishes' && (
+                        <div>
+                            <div className="section-title">
+                                <span>🌟 我们的心愿清单</span>
+                            </div>
+                            <div style={{ marginBottom: 20 }}>
+                                <button className="btn btn-middle btn-primary-pink" onClick={() => setShowWishModal(true)}>
+                                    ✨ 新增心愿
+                                </button>
+                            </div>
+                            <div className="wish-list">
+                                {wishes.map(wish => (
+                                    <div key={wish.id} className="wish-item">
+                                        <div
+                                            className={`wish-checkbox ${wish.done ? 'wish-checkbox-checked' : ''}`}
+                                            onClick={() => toggleWish(wish.id)}
+                                        />
+                                        <div className="wish-info">
+                                            <div className={`wish-title ${wish.done ? 'wish-title-done' : ''}`}>
+                                                {wish.title}
+                                            </div>
+                                            <div className="wish-desc">{wish.desc}</div>
+                                        </div>
+                                        <span
+                                            className={`wish-heart ${wish.liked ? 'wish-heart-liked' : ''}`}
+                                            onClick={() => toggleLike(wish.id)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            {wish.liked ? '❤️' : '🤍'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ===== GALLERY ===== */}
+                    {activeTab === 'gallery' && (
+                        <div>
+                            <div className="section-title">
+                                <span>📸 我们的回忆相册</span>
+                            </div>
+                            <div className="gallery-grid">
+                                {[
+                                    { emoji: '🌊', label: '海边旅行' },
+                                    { emoji: '🎂', label: '一起过生日' },
+                                    { emoji: '🌸', label: '春日赏花' },
+                                    { emoji: '🎄', label: '圣诞约会' },
+                                    { emoji: '✈️', label: '第一次旅行' },
+                                    { emoji: '🍜', label: '一起吃拉面' },
+                                    { emoji: '🎬', label: '电影院约会' },
+                                    { emoji: '☕', label: '咖啡厅时光' },
+                                    { emoji: '🎮', label: '一起打游戏' },
+                                    { emoji: '🌅', label: '看日落' },
+                                    { emoji: '🏔️', label: '爬山' },
+                                    { emoji: '🎡', label: '游乐园' },
+                                ].map((item, i) => (
+                                    <div key={i} className="gallery-item" style={{ background: i % 2 === 0 ? 'var(--primary-bg)' : '#fde4e8' }}>
+                                        <span>{item.emoji}</span>
+                                        <div className="gallery-item-label">{item.label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ===== DATES ===== */}
+                    {activeTab === 'dates' && (
+                        <div>
+                            <div className="section-title">
+                                <span>📅 我们的纪念日</span>
+                            </div>
+                            <div className="date-list">
+                                {specialDates.map((date, i) => {
+                                    const daysUntil = getDaysUntil(date.date);
+                                    const isPast = daysUntil <= 0;
+                                    return (
+                                        <div key={i} className="date-item">
+                                            <div className={`date-icon date-icon-${date.color}`}>
+                                                {date.icon}
+                                            </div>
+                                            <div className="date-info">
+                                                <div className="date-name">{date.name}</div>
+                                                <div className="date-value">
+                                                    {date.date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })}
+                                                </div>
+                                            </div>
+                                            <div className="date-days" style={{ color: isPast ? 'var(--primary)' : 'var(--pink)' }}>
+                                                {isPast ? '❤️ 已过' : `还有 ${daysUntil} 天`}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ===== MESSAGES ===== */}
+                    {activeTab === 'messages' && (
+                        <div>
+                            <div className="section-title">
+                                <span>💌 甜蜜留言板</span>
+                            </div>
+                            <div className="message-board" style={{ marginBottom: 20 }}>
+                                {messages.map(msg => (
+                                    <div key={msg.id} className={`message-bubble ${msg.isSelf ? 'message-bubble-self' : 'message-bubble-other'}`}>
+                                        <div className="message-sender">{msg.sender}</div>
+                                        <div className="message-text">{msg.text}</div>
+                                        <div className="message-time">{msg.time}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                                <div className="input-wrapper input-wrapper-middle" style={{ flex: 1 }}>
+                                    <input
+                                        className="input-field"
+                                        placeholder="说点什么吧..."
+                                        value={newMessage}
+                                        onChange={e => setNewMessage(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && sendMessage()}
+                                    />
+                                </div>
+                                <button className="btn btn-middle btn-primary" onClick={sendMessage}>
+                                    发送 💕
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Footer */}
+                    <div style={{ textAlign: 'center', marginTop: 48, padding: '24px 0', color: 'var(--text-disabled)', fontSize: 13, borderTop: '1px solid var(--border)' }}>
+                        <p>💕 Love Island - 我们的甜蜜小岛 💕</p>
+                        <p style={{ marginTop: 4 }}>
+                            {COUPLE_NAME} · 已相爱 {totalDays} 天
+                        </p>
+                        <p style={{ marginTop: 4, fontSize: 12 }}>
+                            Made with ❤️ for us
+                        </p>
+                    </div>
+
+                    {/* ===== MODALS ===== */}
+                    {showDiaryModal && (
+                        <div className="modal-overlay" onClick={() => setShowDiaryModal(false)}>
+                            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                                <div className="modal-title">✏️ 写日记</div>
+                                <div style={{ marginBottom: 16 }}>
+                                    <label style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' }}>标题</label>
+                                    <div className="input-wrapper input-wrapper-middle">
+                                        <input
+                                            className="input-field"
+                                            placeholder="今天的标题是..."
+                                            value={newDiary.title}
+                                            onChange={e => setNewDiary({ ...newDiary, title: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={{ marginBottom: 16 }}>
+                                    <label style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' }}>内容</label>
+                                    <div className="textarea-wrapper">
+                                        <textarea
+                                            className="textarea-field"
+                                            placeholder="今天发生了什么有趣的事呢？"
+                                            value={newDiary.content}
+                                            onChange={e => setNewDiary({ ...newDiary, content: e.target.value })}
+                                            style={{ minHeight: 120 }}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={{ marginBottom: 16 }}>
+                                    <label style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 8, display: 'block' }}>心情</label>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        {['😊', '🥰', '😍', '😌', '🥺', '🎄', '💕'].map(m => (
+                                            <button
+                                                key={m}
+                                                className={`mood-btn ${newDiary.mood === m ? 'mood-btn-active' : ''}`}
+                                                onClick={() => setNewDiary({ ...newDiary, mood: m })}
+                                                style={{ padding: '8px 12px' }}
+                                            >
+                                                <span style={{ fontSize: 24 }}>{m}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="modal-actions">
+                                    <button className="btn btn-small btn-default" onClick={() => setShowDiaryModal(false)}>取消</button>
+                                    <button className="btn btn-small btn-primary-teal" onClick={addDiary}>保存 ✨</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showWishModal && (
+                        <div className="modal-overlay" onClick={() => setShowWishModal(false)}>
+                            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                                <div className="modal-title">✨ 新增心愿</div>
+                                <div style={{ marginBottom: 16 }}>
+                                    <label style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' }}>心愿名称</label>
+                                    <div className="input-wrapper input-wrapper-middle">
+                                        <input
+                                            className="input-field"
+                                            placeholder="想和TA一起做什么？"
+                                            value={newWish.title}
+                                            onChange={e => setNewWish({ ...newWish, title: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={{ marginBottom: 16 }}>
+                                    <label style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' }}>描述（可选）</label>
+                                    <div className="textarea-wrapper">
+                                        <textarea
+                                            className="textarea-field"
+                                            placeholder="详细说说..."
+                                            value={newWish.desc}
+                                            onChange={e => setNewWish({ ...newWish, desc: e.target.value })}
+                                            style={{ minHeight: 60 }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="modal-actions">
+                                    <button className="btn btn-small btn-default" onClick={() => setShowWishModal(false)}>取消</button>
+                                    <button className="btn btn-small btn-primary-pink" onClick={addWish}>添加 🌟</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
