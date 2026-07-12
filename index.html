@@ -880,6 +880,8 @@
         var _y = useState(false), showTokenInput = _y[0], setShowTokenInput = _y[1];
         var _z = useState(GITHUB_TOKEN), editToken = _z[0], setEditToken = _z[1];
         var _z2 = useState('grid'), galleryView = _z2[0], setGalleryView = _z2[1];
+        var _z3 = useState(new Date().getFullYear()), dpYear = _z3[0], setDpYear = _z3[1];
+        var _z4 = useState(new Date().getMonth()), dpMonth = _z4[0], setDpMonth = _z4[1];
         var _u = useState({ title: '', reason: '', nextStep: '' }), newFight = _u[0], setNewFight = _u[1];
         var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
@@ -1756,10 +1758,7 @@
                     // 内联日历选择器
                     function() {
                         var now = new Date();
-                        var dpDate = editingDate && editingDate.dateStr ? new Date(editingDate.dateStr) : now;
-                        var dpYear = dpDate.getFullYear();
-                        var dpMonth = dpDate.getMonth();
-                        // 简化月历：显示年月 + 日期网格
+                        var selDate = editingDate && editingDate.dateStr ? new Date(editingDate.dateStr) : now;
                         var firstDay = new Date(dpYear, dpMonth, 1).getDay();
                         var daysInMonth = new Date(dpYear, dpMonth + 1, 0).getDate();
                         var weekdays = ['日','一','二','三','四','五','六'];
@@ -1769,15 +1768,15 @@
                         for (var i = 1; i <= daysInMonth; i++) cells.push(i);
                         return h('div', { style: { background: 'var(--bg)', borderRadius: 16, padding: 12, border: '2px solid var(--border)' } },
                             h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 } },
-                                h('button', { style: { border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-body)', fontFamily: 'inherit' }, onClick: function() { if (editingDate) { var d = new Date(dpYear, dpMonth - 1, 1); setEditingDate(Object.assign({}, editingDate, { dateStr: d.toISOString().split('T')[0] })); } } }, '‹'),
+                                h('button', { style: { border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-body)', fontFamily: 'inherit' }, onClick: function() { if (dpMonth === 0) { setDpMonth(11); setDpYear(dpYear - 1); } else { setDpMonth(dpMonth - 1); } } }, '‹'),
                                 h('span', { style: { fontSize: 15, fontWeight: 700, color: 'var(--text)' } }, dpYear + '年 ' + monthNames[dpMonth]),
-                                h('button', { style: { border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-body)', fontFamily: 'inherit' }, onClick: function() { if (editingDate) { var d = new Date(dpYear, dpMonth + 1, 1); setEditingDate(Object.assign({}, editingDate, { dateStr: d.toISOString().split('T')[0] })); } } }, '›')
+                                h('button', { style: { border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-body)', fontFamily: 'inherit' }, onClick: function() { if (dpMonth === 11) { setDpMonth(0); setDpYear(dpYear + 1); } else { setDpMonth(dpMonth + 1); } } }, '›')
                             ),
                             h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 } },
                                 weekdays.map(function(w) { return h('div', { style: { textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', padding: '3px 0' } }, w); }),
                                 cells.map(function(d, i) {
                                     if (d === 0) return h('div', { key: i });
-                                    var selected = dpDate.getDate() === d;
+                                    var selected = selDate.getFullYear() === dpYear && selDate.getMonth() === dpMonth && selDate.getDate() === d;
                                     return h('div', {
                                         key: i,
                                         style: { textAlign: 'center', fontSize: 13, fontWeight: selected ? 900 : 600, padding: '5px 2px', borderRadius: 8, cursor: 'pointer', background: selected ? 'var(--primary)' : 'transparent', color: selected ? '#fff' : 'var(--text-body)' },
@@ -1786,7 +1785,7 @@
                                 })
                             ),
                             h('div', { style: { display: 'flex', gap: 6, marginTop: 8, justifyContent: 'center' } },
-                                h('button', { className: 'btn btn-small btn-default', onClick: function() { var d = new Date(); if (editingDate) setEditingDate(Object.assign({}, editingDate, { dateStr: d.toISOString().split('T')[0] })); } }, '📅 今天')
+                                h('button', { className: 'btn btn-small btn-default', onClick: function() { var d = new Date(); if (editingDate) { setEditingDate(Object.assign({}, editingDate, { dateStr: d.toISOString().split('T')[0] })); setDpYear(d.getFullYear()); setDpMonth(d.getMonth()); } } }, '📅 今天')
                             ),
                             editingDate && editingDate.dateStr ? h('div', { style: { fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, textAlign: 'center' } },
                                 '🌙 ' + getLunarDateStr(new Date(editingDate.dateStr))
