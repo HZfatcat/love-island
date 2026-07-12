@@ -1607,7 +1607,10 @@
                                     d.isLunar ? h('span', { style: { fontSize: 11, color: 'var(--text-muted)', marginLeft: 6 } }, '🌙 ' + getLunarDateStr(d.date)) : null
                                 )
                             ),
-                            h('div', { className: 'date-days', style: { color: countType === 'until' ? 'var(--primary)' : 'var(--pink)' } },
+                            h('div', { className: 'date-days', style: { color: countType === 'until' ? 'var(--primary)' : 'var(--pink)' }, title: countType === 'until'
+                                ? (daysUntil <= 0 ? d.name + ' ❤️ 已过' : '距离 ' + d.name + ' 还有 ' + daysUntil + ' 天（每年按公历' + displayDate.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' }) + '计算）')
+                                : '从 ' + d.date.toLocaleDateString('zh-CN') + ' 到现在已经过去了 ' + daysSince + ' 天'
+                            },
                                 countType === 'until' ? (daysUntil <= 0 ? '❤️ 已过' : '还有 ' + daysUntil + ' 天') : (daysSince + ' 天前')
                             ),
                             h('div', { className: 'journal-actions', style: { marginLeft: 8 } },
