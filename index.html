@@ -501,26 +501,36 @@
         var _e = useState(function() { return loadData('coupleName', COUPLE_NAME); }), coupleName = _e[0], setCoupleName = _e[1];
         var _f = useState(function() { return loadData('loveStart', LOVE_START.toISOString()); }), loveStartStr = _f[0], setLoveStartStr = _f[1];
         var loveStart = new Date(loveStartStr);
+        // 特殊日期也从 localStorage 恢复（带日期对象还原）
+        var specDates = loadData('specialDates', null);
+        var _f2 = useState(specDates ? specDates.map(function(d) { return Object.assign({}, d, { date: new Date(d.date) }); }) : SPECIAL_DATES);
+        var specialDates = _f2[0], setSpecialDates = _f2[1];
 
         // 自动保存到 localStorage
         useEffect(function() { saveData('journal', journalEntries); }, [journalEntries]);
         useEffect(function() { saveData('wishes', wishes); }, [wishes]);
         useEffect(function() { saveData('messages', messages); }, [messages]);
         useEffect(function() { saveData('coupleName', coupleName); }, [coupleName]);
+        useEffect(function() { saveData('loveStart', loveStartStr); }, [loveStartStr]);
+        useEffect(function() { saveData('specialDates', specialDates); }, [specialDates]);
 
         var _g = useState(false), showDiary = _g[0], setShowDiary = _g[1];
         var _h = useState(false), showWish = _h[0], setShowWish = _h[1];
         var _i = useState(false), showEditDiary = _i[0], setShowEditDiary = _i[1];
         var _j = useState(false), showEditWish = _j[0], setShowEditWish = _j[1];
         var _k = useState(false), showNameEdit = _k[0], setShowNameEdit = _k[1];
+        var _k2 = useState(false), showDateEdit = _k2[0], setShowDateEdit = _k2[1];
+        var _k3 = useState(false), showStartDateEdit = _k3[0], setShowStartDateEdit = _k3[1];
         var _l = useState({ title: '', content: '', mood: '😊', color: 'pink' }), newDiary = _l[0], setNewDiary = _l[1];
         var _m = useState({ title: '', desc: '' }), newWish = _m[0], setNewWish = _m[1];
         var _n = useState(null), editingDiary = _n[0], setEditingDiary = _n[1];
         var _o = useState(null), editingWish = _o[0], setEditingWish = _o[1];
+        var _o2 = useState(null), editingDate = _o2[0], setEditingDate = _o2[1];
         var _p = useState(null), todayMood = _p[0], setTodayMood = _p[1];
         var _q = useState(''), moodNote = _q[0], setMoodNote = _q[1];
         var _r = useState(''), newMessage = _r[0], setNewMessage = _r[1];
         var _s = useState(coupleName), editName = _s[0], setEditName = _s[1];
+        var _t = useState(loveStartStr.split('T')[0]), editStartDate = _t[0], setEditStartDate = _t[1];
 
         function toggleWish(id) {
             setWishes(wishes.map(function(w) { return w.id === id ? Object.assign({}, w, { done: !w.done }) : w; }));
@@ -569,6 +579,29 @@
             }
             setShowNameEdit(false);
         }
+        function saveStartDate() {
+            if (editStartDate) {
+                setLoveStartStr(new Date(editStartDate).toISOString());
+            }
+            setShowStartDateEdit(false);
+        }
+        function saveEditDate() {
+            if (!editingDate || !editingDate.name) return;
+            setSpecialDates(specialDates.map(function(d) { return d.name === editingDate.origName ? editingDate : d; }));
+            setEditingDate(null);
+            setShowDateEdit(false);
+        }
+        function deleteDate(name) {
+            if (confirm('确定要删除「' + name + '」吗？')) {
+                setSpecialDates(specialDates.filter(function(d) { return d.name !== name; }));
+            }
+        }
+        function addDate() {
+            if (!editingDate || !editingDate.name) return;
+            setSpecialDates(specialDates.concat([{ icon: editingDate.icon || '💕', name: editingDate.name, date: new Date(editingDate.dateStr), color: editingDate.color || 'pink' }]));
+            setEditingDate(null);
+            setShowDateEdit(false);
+        }
         function sendMessage() {
             if (!newMessage.trim()) return;
             var now = new Date();
@@ -597,10 +630,17 @@
         function renderHome() {
             var names = coupleName.split(' & ');
             return h('div', null,
-                h('div', { className: 'anniversary-hero', style: { marginBottom: 28 } },
+                h('div', { className: 'anniversary-hero', style: { marginBottom: 28, cursor: 'pointer' }, onClick: function() { setEditStartDate(loveStartStr.split('T')[0]); setShowStartDateEdit(true); }, title: '点击修改在一起的日子' },
                     h('div', { className: 'anniversary-hearts' }, '💕💗💖'),
                     h('div', { className: 'anniversary-title' }, coupleName + ' 的爱情小岛'),
-                    h('div', { className: 'anniversary-sub' }, '从 ' + loveStart.toLocaleDateString('zh-CN') + ' 开始，我们携手走过了'),
+                    h('div', { className: 'anniversary-sub' },
+                        '从 ',
+                        h('span', { style: { color: 'var(--primary)', fontWeight: 700, cursor: 'pointer', borderBottom: '2px dashed var(--primary)' } }, loveStart.toLocaleDateString('zh-CN')),
+                        ' 开始，我们携手走过了'
+                    ),
+                    h('div', { className: 'anniversary-days' }, String(cd.totalDays)),
+                    h('div', { className: 'anniversary-days-label' }, '天的甜蜜旅程 💕')
+                ),
                     h('div', { className: 'anniversary-days' }, String(cd.totalDays)),
                     h('div', { className: 'anniversary-days-label' }, '天的甜蜜旅程 💕')
                 ),
@@ -728,12 +768,19 @@
             );
         }
 
-        // ====== 纪念日 ======
+        // ====== 纪念日（含编辑/删除/新增） ======
         function renderDates() {
+            function openNewDate() {
+                setEditingDate({ origName: '', name: '', icon: '💕', dateStr: new Date().toISOString().split('T')[0], color: 'pink', isNew: true });
+                setShowDateEdit(true);
+            }
             return h('div', null,
                 h('div', { className: 'section-title' }, h('span', null, '📅 我们的纪念日')),
+                h('div', { style: { marginBottom: 20 } },
+                    h('button', { className: 'btn btn-middle btn-primary-teal', onClick: openNewDate }, '✨ 新增纪念日')
+                ),
                 h('div', { className: 'date-list' },
-                    SPECIAL_DATES.map(function(d, i) {
+                    specialDates.map(function(d, i) {
                         var daysUntil = getDaysUntil(d.date);
                         return h('div', { key: i, className: 'date-item' },
                             h('div', { className: 'date-icon date-icon-' + d.color }, d.icon),
@@ -741,7 +788,11 @@
                                 h('div', { className: 'date-name' }, d.name),
                                 h('div', { className: 'date-value' }, d.date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' }))
                             ),
-                            h('div', { className: 'date-days', style: { color: 'var(--primary)' } }, daysUntil <= 0 ? '❤️ 已过' : '还有 ' + daysUntil + ' 天')
+                            h('div', { className: 'date-days', style: { color: 'var(--primary)' } }, daysUntil <= 0 ? '❤️ 已过' : '还有 ' + daysUntil + ' 天'),
+                            h('div', { className: 'journal-actions', style: { marginLeft: 8 } },
+                                h('button', { className: 'action-btn', onClick: function() { setEditingDate({ origName: d.name, name: d.name, icon: d.icon, dateStr: d.date.toISOString().split('T')[0], color: d.color, isNew: false }); setShowDateEdit(true); }, title: '编辑' }, '✏️'),
+                                h('button', { className: 'action-btn action-btn-danger', onClick: function() { deleteDate(d.name); }, title: '删除' }, '🗑️')
+                            )
                         );
                     })
                 )
@@ -856,7 +907,7 @@
                     )
                 )
             ),
-            // 编辑日记 Modal
+            // 编辑日记 Modal（含日期修改）
             h(Modal, { show: showEditDiary, title: '📝 编辑日记', onClose: function() { setShowEditDiary(false); }, onConfirm: saveEditDiary, confirmText: '保存修改 💾', confirmClass: 'btn-primary-teal' },
                 h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '标题'),
@@ -868,6 +919,12 @@
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '内容'),
                     h('div', { className: 'textarea-wrapper' },
                         h('textarea', { className: 'textarea-field', value: editingDiary ? editingDiary.content : '', onChange: function(e) { if (editingDiary) setEditingDiary(Object.assign({}, editingDiary, { content: e.target.value })); }, style: { minHeight: 120 } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '日期'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', type: 'date', value: editingDiary ? editingDiary.date : '', onChange: function(e) { if (editingDiary) setEditingDiary(Object.assign({}, editingDiary, { date: e.target.value })); } })
                     )
                 )
             ),
@@ -892,6 +949,49 @@
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '你们的昵称（格式：你的昵称 & TA的昵称）'),
                     h('div', { className: 'input-wrapper input-wrapper-middle' },
                         h('input', { className: 'input-field', value: editName, onChange: function(e) { setEditName(e.target.value); }, placeholder: '如：小可爱 & 大笨蛋' })
+                    )
+                )
+            ),
+            // 修改在一起的日子 Modal
+            h(Modal, { show: showStartDateEdit, title: '💕 修改在一起的日子', onClose: function() { setShowStartDateEdit(false); }, onConfirm: saveStartDate, confirmText: '保存 💾', confirmClass: 'btn-primary-teal' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '选择你们在一起的日期'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', type: 'date', value: editStartDate, onChange: function(e) { setEditStartDate(e.target.value); } })
+                    )
+                )
+            ),
+            // 编辑/新增纪念日 Modal
+            h(Modal, { show: showDateEdit, title: editingDate && editingDate.isNew ? '✨ 新增纪念日' : '📅 编辑纪念日', onClose: function() { setShowDateEdit(false); }, onConfirm: editingDate && editingDate.isNew ? addDate : saveEditDate, confirmText: editingDate && editingDate.isNew ? '添加 ✨' : '保存 💾', confirmClass: 'btn-primary-teal' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '名称'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', value: editingDate ? editingDate.name : '', onChange: function(e) { if (editingDate) setEditingDate(Object.assign({}, editingDate, { name: e.target.value })); }, placeholder: '如：100天纪念日' })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '日期'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', type: 'date', value: editingDate ? editingDate.dateStr : '', onChange: function(e) { if (editingDate) setEditingDate(Object.assign({}, editingDate, { dateStr: e.target.value })); } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '图标'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', value: editingDate ? editingDate.icon : '', onChange: function(e) { if (editingDate) setEditingDate(Object.assign({}, editingDate, { icon: e.target.value })); }, placeholder: '💕 🎂 💍 🎄 🎆' })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '颜色'),
+                    h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+                        ['pink','teal','blue','purple','yellow'].map(function(c) {
+                            return h('button', {
+                                key: c,
+                                className: 'mood-btn' + (editingDate && editingDate.color === c ? ' mood-btn-active' : ''),
+                                onClick: function() { if (editingDate) setEditingDate(Object.assign({}, editingDate, { color: c })); },
+                                style: { padding: '6px 12px', fontSize: 12 },
+                            }, c);
+                        })
                     )
                 )
             )
