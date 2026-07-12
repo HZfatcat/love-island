@@ -2019,9 +2019,9 @@
             // 新增吵架 Modal
             h(Modal, { show: showFight, title: '😤 记录吵架', onClose: function() { setShowFight(false); }, onConfirm: addFight, confirmText: '记录 📝', confirmClass: 'btn-primary' },
                 h('div', { style: { marginBottom: 16 } },
-                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '吵架原因'),
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '标题'),
                     h('div', { className: 'input-wrapper input-wrapper-middle' },
-                        h('input', { className: 'input-field', placeholder: '为什么吵架？', value: newFight.title, onChange: function(e) { setNewFight(Object.assign({}, newFight, { title: e.target.value })); } })
+                        h('input', { className: 'input-field', placeholder: '用一句话概括', value: newFight.title, onChange: function(e) { setNewFight(Object.assign({}, newFight, { title: e.target.value })); } })
                     )
                 ),
                 h('div', { style: { marginBottom: 16 } },
@@ -2052,7 +2052,7 @@
             // 编辑吵架 Modal
             h(Modal, { show: showEditFight, title: '📝 编辑吵架记录', onClose: function() { setShowEditFight(false); }, onConfirm: saveEditFight, confirmText: '保存修改 💾', confirmClass: 'btn-primary-teal' },
                 h('div', { style: { marginBottom: 16 } },
-                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '吵架原因'),
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '标题'),
                     h('div', { className: 'input-wrapper input-wrapper-middle' },
                         h('input', { className: 'input-field', value: editingFight ? editingFight.title : '', onChange: function(e) { if (editingFight) setEditingFight(Object.assign({}, editingFight, { title: e.target.value })); } })
                     )
