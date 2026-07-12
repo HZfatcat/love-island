@@ -390,33 +390,15 @@
 
     <div id="root"></div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- 云端同步使用 GitHub API（无需额外注册） -->
     <script>
     // ====== 纯 React.createElement 实现，不依赖 Babel/JSX ======
 
     const { createElement: h, useState, useEffect, useRef } = React;
 
-    // ====== Firebase 配置（修改这里） ======
-    // 去 https://firebase.google.com 用 Google 账号登录 → 创建项目 → 添加 Web 应用 → 复制配置
-    // 注意：左侧菜单 → Realtime Database → 创建数据库（选测试模式）后才能获取 databaseURL
-    var FIREBASE_CONFIG = {
-        apiKey: "AIzaSyBBhcBxPSzbiRlm7CbDOQGci9vmw5O17aI",
-        authDomain: "love-island-yw.firebaseapp.com",
-        databaseURL: "https://love-island-yw-default-rtdb.firebaseio.com",
-        projectId: "love-island-yw",
-        storageBucket: "love-island-yw.firebasestorage.app",
-        messagingSenderId: "566196952217",
-        appId: "1:566196952217:web:8630a5985d3e013f2b6c08"
-    };
-    var FB_READY = false;
-    if (typeof firebase !== 'undefined' && FIREBASE_CONFIG.databaseURL) {
-        firebase.initializeApp(FIREBASE_CONFIG);
-        FB_READY = true;
-    }
-
-    // ====== 数据存储（Firebase + localStorage 双保险） ======
-    var FB_SYNCING = {};
+    // ====== 云端同步（使用 jsonblob.com 免费 API，无需注册） ======
+    var CLOUD_BLOB_URL = localStorage.getItem('love_island_cloud_url') || '';
+    var CLOUD_SYNCING = {};
 
     function loadData(key, fallback) {
         try {
@@ -434,31 +416,62 @@
 
     function saveData(key, data) {
         try { localStorage.setItem('love_island_' + key, JSON.stringify(data)); } catch(e) {}
-        if (!FB_READY) return;
-        if (FB_SYNCING[key]) return;
-        firebase.database().ref('love_island/' + key).set(data);
+        if (CLOUD_SYNCING[key]) return;
+        uploadToCloud();
     }
 
-    // 监听 Firebase 数据变化
-    function initFirebaseSync(callback) {
-        if (!FB_READY) return;
+    function getAllData() {
+        var result = {};
         var keys = ['journal', 'wishes', 'messages', 'fights', 'coupleName', 'loveStart',
                      'meetDate', 'firstDate', 'separateDate', 'nextMeetDate', 'specialDates'];
-        keys.forEach(function(key) {
-            firebase.database().ref('love_island/' + key).on('value', function(snapshot) {
-                var data = snapshot.val();
-                if (data === null) return;
-                FB_SYNCING[key] = true;
-                try {
-                    localStorage.setItem('love_island_' + key, JSON.stringify(data));
-                    if (key === 'specialDates' && Array.isArray(data)) {
-                        data.forEach(function(d) { if (d.date) d.date = new Date(d.date); });
-                    }
-                    callback(key, data);
-                } catch(e) {}
-                setTimeout(function() { delete FB_SYNCING[key]; }, 500);
-            });
+        keys.forEach(function(k) {
+            try { result[k] = JSON.parse(localStorage.getItem('love_island_' + k)); } catch(e) {}
         });
+        return result;
+    }
+
+    function uploadToCloud() {
+        var data = getAllData();
+        var url = CLOUD_BLOB_URL || 'https://jsonblob.com/api/jsonBlob';
+        var method = CLOUD_BLOB_URL ? 'PUT' : 'POST';
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(function(r) {
+            if (!CLOUD_BLOB_URL) {
+                var blobUrl = r.headers.get('Location');
+                if (blobUrl) {
+                    CLOUD_BLOB_URL = blobUrl;
+                    localStorage.setItem('love_island_cloud_url', blobUrl);
+                }
+            }
+            return r.json();
+        }).then(function() {}).catch(function() {});
+    }
+
+    function downloadFromCloud() {
+        if (!CLOUD_BLOB_URL) return Promise.resolve(false);
+        return fetch(CLOUD_BLOB_URL + '?t=' + Date.now()).then(function(r) {
+            if (!r.ok) throw new Error('No data');
+            return r.json();
+        }).then(function(data) {
+            var keys = Object.keys(data);
+            keys.forEach(function(key) {
+                var val = data[key];
+                if (val === null) return;
+                CLOUD_SYNCING[key] = true;
+                try {
+                    localStorage.setItem('love_island_' + key, JSON.stringify(val));
+                    if (key === 'specialDates' && Array.isArray(val)) {
+                        val.forEach(function(d) { if (d.date) d.date = new Date(d.date); });
+                    }
+                    window.dispatchEvent(new CustomEvent('cloud-sync', { detail: { key: key, data: val } }));
+                } catch(e) {}
+                setTimeout(function() { delete CLOUD_SYNCING[key]; }, 500);
+            });
+            return true;
+        }).catch(function() { return false; });
     }
 
     // ====== DATA ======
@@ -770,10 +783,21 @@
         useEffect(function() { saveData('nextMeetDate', nextMeetDateStr); }, [nextMeetDateStr]);
         useEffect(function() { saveData('specialDates', specialDates); }, [specialDates]);
 
-        // 启动 Firebase 实时监听
+        // 启动云端同步
         useEffect(function() {
-            if (!FB_READY) return;
-            initFirebaseSync(function(key, data) {
+            downloadFromCloud().then(function(ok) {
+                if (ok) setCloudStatus(true);
+            });
+            // 每15秒检查云端更新
+            var timer = setInterval(function() {
+                downloadFromCloud().then(function(ok) {
+                    if (ok) setCloudStatus(true);
+                });
+            }, 15000);
+            // 监听云端同步事件
+            function handler(e) {
+                var key = e.detail.key;
+                var data = e.detail.data;
                 if (key === 'journal') setJournalEntries(data);
                 else if (key === 'wishes') setWishes(data);
                 else if (key === 'messages') setMessages(data);
@@ -785,8 +809,12 @@
                 else if (key === 'separateDate') { setSeparateDateStr(data); }
                 else if (key === 'nextMeetDate') { setNextMeetDateStr(data); }
                 else if (key === 'specialDates') { setSpecialDates(data.map(function(d) { return Object.assign({}, d, { date: new Date(d.date) }); })); }
-            });
-            setCloudStatus('synced');
+            }
+            window.addEventListener('cloud-sync', handler);
+            return function() {
+                clearInterval(timer);
+                window.removeEventListener('cloud-sync', handler);
+            };
         }, []);
 
         var _g = useState(false), showDiary = _g[0], setShowDiary = _g[1];
@@ -822,7 +850,7 @@
         var _u = useState(0), calMonth = _u[0], setCalMonth = _u[1];
         var _v = useState(2026), calYear = _v[0], setCalYear = _v[1];
         var _w = useState(null), calPopup = _w[0], setCalPopup = _w[1];
-        var _x = useState(FB_READY ? 'synced' : 'offline'), cloudStatus = _x[0], setCloudStatus = _x[1];
+        var _x = useState(false), cloudStatus = _x[0], setCloudStatus = _x[1];
         var _u = useState({ title: '', reason: '', nextStep: '' }), newFight = _u[0], setNewFight = _u[1];
         var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
@@ -1462,9 +1490,9 @@
                         h('div', { className: 'header-stat-num' }, String(cd.totalDays)),
                         h('div', { className: 'header-stat-label' }, '在一起的天数 ❤️')
                     ),
-                    FB_READY ? h('div', { className: 'header-stat', title: cloudStatus === 'synced' ? '云端已同步' : '同步中...' },
-                        h('div', { style: { fontSize: 14, color: cloudStatus === 'synced' ? 'var(--success)' : 'var(--warning)' } }, cloudStatus === 'synced' ? '☁️' : '🔄'),
-                        h('div', { className: 'header-stat-label' }, cloudStatus === 'synced' ? '已同步' : '同步中')
+                    cloudStatus ? h('div', { className: 'header-stat', title: '数据已同步到云端' },
+                        h('div', { style: { fontSize: 14, color: 'var(--success)' } }, '☁️'),
+                        h('div', { className: 'header-stat-label' }, '已同步')
                     ) : null
                 )
             ),
