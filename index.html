@@ -554,7 +554,7 @@
         var specialDates = _f2[0], setSpecialDates = _f2[1];
 
         // 倒计时依赖 specialDates，放在后面初始化
-        var cd = useCountdown(LOVE_START, specialDates);
+        var cd = useCountdown(loveStart, specialDates);
 
         // 自动保存到 localStorage
         useEffect(function() { saveData('journal', journalEntries); }, [journalEntries]);
