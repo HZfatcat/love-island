@@ -608,12 +608,12 @@
         { id: 2, date: '2025-05-20', title: '约会迟到', reason: '约好6点看电影，迟到了20分钟，手机还没电了联系不上。', nextStep: '以后提前30分钟出门，随身带充电宝。', status: 'wip' },
     ];
     var SPECIAL_DATES = [
-        { icon: '💕', name: '在一起的日子', date: new Date('2024-02-14'), color: 'pink', isLunar: false },
-        { icon: '🎂', name: '她的生日', date: new Date('2025-08-15'), color: 'teal', isLunar: true },
-        { icon: '🎂', name: '他的生日', date: new Date('2025-11-20'), color: 'blue', isLunar: true },
-        { icon: '💍', name: '求婚纪念日', date: new Date('2025-06-01'), color: 'purple', isLunar: false },
-        { icon: '🎄', name: '圣诞节', date: new Date('2025-12-25'), color: 'yellow', isLunar: false },
-        { icon: '🎆', name: '跨年夜', date: new Date('2026-01-01'), color: 'pink', isLunar: false },
+        { icon: '💕', name: '在一起的日子', date: new Date('2024-02-14'), color: 'pink', isLunar: false, countdown: 'since' },
+        { icon: '🎂', name: '她的生日', date: new Date('2025-08-15'), color: 'teal', isLunar: true, countdown: 'until' },
+        { icon: '🎂', name: '他的生日', date: new Date('2025-11-20'), color: 'blue', isLunar: true, countdown: 'until' },
+        { icon: '💍', name: '求婚纪念日', date: new Date('2025-06-01'), color: 'purple', isLunar: false, countdown: 'since' },
+        { icon: '🎄', name: '圣诞节', date: new Date('2025-12-25'), color: 'yellow', isLunar: false, countdown: 'until' },
+        { icon: '🎆', name: '跨年夜', date: new Date('2026-01-01'), color: 'pink', isLunar: false, countdown: 'until' },
     ];
     var MOOD_LIST = [
         { emoji: '😊', label: '开心' },
@@ -974,7 +974,7 @@
         function addDate() {
             if (!editingDate || !editingDate.name) return;
             var newDate = new Date(editingDate.dateStr + 'T12:00:00');
-            setSpecialDates(specialDates.concat([{ icon: editingDate.icon || '💕', name: editingDate.name, date: newDate, color: editingDate.color || 'pink', isLunar: editingDate.isLunar || false }]));
+            setSpecialDates(specialDates.concat([{ icon: editingDate.icon || '💕', name: editingDate.name, date: newDate, color: editingDate.color || 'pink', isLunar: editingDate.isLunar || false, countdown: editingDate.countdown || 'until' }]));
             setEditingDate(null);
             setShowDateEdit(false);
         }
@@ -1553,7 +1553,7 @@
         // ====== 纪念日（含日历/编辑/删除/新增） ======
         function renderDates() {
             function openNewDate() {
-                setEditingDate({ origName: '', name: '', icon: '💕', dateStr: new Date().toISOString().split('T')[0], color: 'pink', isNew: true, isLunar: false });
+                setEditingDate({ origName: '', name: '', icon: '💕', dateStr: new Date().toISOString().split('T')[0], color: 'pink', isNew: true, isLunar: false, countdown: 'until' });
                 setShowDateEdit(true);
             }
             return h('div', null,
@@ -1565,15 +1565,20 @@
                 h('div', { className: 'date-list' },
                     specialDates.map(function(d, i) {
                         var displayDate = d.date;
+                        var countType = d.countdown || 'until';
                         // 如果是农历生日，计算今年的公历日期
                         if (d.isLunar) {
-                            var lunar = solarToLunar(d.date);
-                            if (lunar) {
-                                var thisYearSolar = getLunarBirthdaySolar(lunar.month, lunar.day, lunar.isLeap, new Date().getFullYear());
-                                if (thisYearSolar) displayDate = thisYearSolar;
-                            }
+                            try {
+                                if (typeof Lunar !== 'undefined') {
+                                    var solar = Solar.fromDate(d.date);
+                                    var lunar = Lunar.fromSolar(solar);
+                                    var thisYearLunar = Lunar.fromYmd(new Date().getFullYear(), lunar.getMonth(), lunar.getDay());
+                                    displayDate = new Date(thisYearLunar.getSolar().getYear(), thisYearLunar.getSolar().getMonth() - 1, thisYearLunar.getSolar().getDay());
+                                }
+                            } catch(e) {}
                         }
                         var daysUntil = getDaysUntil(displayDate);
+                        var daysSince = Math.floor((new Date() - displayDate) / (1000*60*60*24));
                         return h('div', { key: i, className: 'date-item' },
                             h('div', { className: 'date-icon date-icon-' + d.color }, d.icon),
                             h('div', { className: 'date-info' },
@@ -1583,9 +1588,11 @@
                                     d.isLunar ? h('span', { style: { fontSize: 11, color: 'var(--text-muted)', marginLeft: 6 } }, '🌙 ' + getLunarDateStr(d.date)) : null
                                 )
                             ),
-                            h('div', { className: 'date-days', style: { color: 'var(--primary)' } }, daysUntil <= 0 ? '❤️ 已过' : '还有 ' + daysUntil + ' 天'),
+                            h('div', { className: 'date-days', style: { color: countType === 'until' ? 'var(--primary)' : 'var(--pink)' } },
+                                countType === 'until' ? (daysUntil <= 0 ? '❤️ 已过' : '还有 ' + daysUntil + ' 天') : (daysSince + ' 天前')
+                            ),
                             h('div', { className: 'journal-actions', style: { marginLeft: 8 } },
-                                h('button', { className: 'action-btn', onClick: function() { setEditingDate({ origName: d.name, name: d.name, icon: d.icon, dateStr: d.date.toISOString().split('T')[0], color: d.color, isNew: false, isLunar: d.isLunar || false }); setShowDateEdit(true); }, title: '编辑' }, '✏️'),
+                                h('button', { className: 'action-btn', onClick: function() { setEditingDate({ origName: d.name, name: d.name, icon: d.icon, dateStr: d.date.toISOString().split('T')[0], color: d.color, isNew: false, isLunar: d.isLunar || false, countdown: d.countdown || 'until' }); setShowDateEdit(true); }, title: '编辑' }, '✏️'),
                                 h('button', { className: 'action-btn action-btn-danger', onClick: function() { deleteDate(d.name); }, title: '删除' }, '🗑️')
                             )
                         );
@@ -1897,6 +1904,13 @@
                     editingDate && editingDate.isLunar && editingDate.dateStr ? h('div', { style: { fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 } },
                         '🌙 农历 ' + getLunarDateStr(new Date(editingDate.dateStr))
                     ) : null
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '统计方式'),
+                    h('div', { style: { display: 'flex', gap: 8 } },
+                        h('button', { className: 'btn btn-small ' + (editingDate && editingDate.countdown === 'until' ? 'btn-primary-teal' : 'btn-default'), onClick: function() { if (editingDate) setEditingDate(Object.assign({}, editingDate, { countdown: 'until' })); } }, '⏰ 倒计时'),
+                        h('button', { className: 'btn btn-small ' + (editingDate && editingDate.countdown === 'since' ? 'btn-primary-teal' : 'btn-default'), onClick: function() { if (editingDate) setEditingDate(Object.assign({}, editingDate, { countdown: 'since' })); } }, '📅 已过去')
+                    )
                 ),
                 h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '图标'),
