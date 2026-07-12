@@ -507,6 +507,9 @@
     var GITHUB_DATA_URL = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/data.json';
     var GITHUB_RAW_URL = 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/master/data.json';
     var CLOUD_SYNCING = {};
+    var CLOUD_UPLOAD_TIMER = null;
+    var CLOUD_IS_UPLOADING = false;
+    var CLOUD_LAST_UPLOAD = 0;
 
     function loadData(key, fallback) {
         try {
@@ -525,7 +528,12 @@
     function saveData(key, data) {
         try { localStorage.setItem('love_island_' + key, JSON.stringify(data)); } catch(e) {}
         if (CLOUD_SYNCING[key]) return;
-        uploadToCloud();
+        // 防抖：500ms 内多次修改只上传一次
+        if (CLOUD_UPLOAD_TIMER) clearTimeout(CLOUD_UPLOAD_TIMER);
+        CLOUD_UPLOAD_TIMER = setTimeout(function() {
+            CLOUD_UPLOAD_TIMER = null;
+            uploadToCloud();
+        }, 500);
     }
 
     function getAllData() {
@@ -540,6 +548,7 @@
 
     function uploadToCloud() {
         if (!GITHUB_TOKEN) return;
+        CLOUD_IS_UPLOADING = true;
         var data = getAllData();
         var content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
         fetch(GITHUB_DATA_URL, {
@@ -551,11 +560,16 @@
                 headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
                 body: JSON.stringify({ message: '💕 数据同步', content: content, sha: sha })
             });
-        }).then(function(r) { return r.json(); }).then(function() {}).catch(function() {});
+        }).then(function(r) { return r.json(); }).then(function() {
+            CLOUD_LAST_UPLOAD = Date.now();
+            CLOUD_IS_UPLOADING = false;
+        }).catch(function() { CLOUD_IS_UPLOADING = false; });
     }
 
     function downloadFromCloud() {
         if (!GITHUB_TOKEN) return Promise.resolve(false);
+        // 上传中或刚上传完（5秒内），跳过下载避免覆盖
+        if (CLOUD_IS_UPLOADING || Date.now() - CLOUD_LAST_UPLOAD < 5000) return Promise.resolve(false);
         return fetch(GITHUB_RAW_URL + '?t=' + Date.now()).then(function(r) {
             if (!r.ok) throw new Error('No data');
             return r.json();
