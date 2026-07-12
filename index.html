@@ -392,6 +392,8 @@
     var LOVE_START = new Date('2024-02-14T00:00:00');
     var MEET_DATE = new Date('2023-09-01T00:00:00');
     var FIRST_DATE = new Date('2023-12-24T00:00:00');
+    var SEPARATE_DATE = new Date('2026-07-05T00:00:00');
+    var NEXT_MEET_DATE = new Date('2026-08-15T00:00:00');
     var COUPLE_NAME = '小可爱 & 大笨蛋';
     var COUPLE_SHORT = ['小可爱', '大笨蛋'];
 
@@ -557,6 +559,10 @@
         var meetDate = new Date(meetDateStr);
         var _f4 = useState(function() { return loadData('firstDate', FIRST_DATE.toISOString()); }), firstDateStr = _f4[0], setFirstDateStr = _f4[1];
         var firstDate = new Date(firstDateStr);
+        var _f5 = useState(function() { return loadData('separateDate', SEPARATE_DATE.toISOString()); }), separateDateStr = _f5[0], setSeparateDateStr = _f5[1];
+        var separateDate = new Date(separateDateStr);
+        var _f6 = useState(function() { return loadData('nextMeetDate', NEXT_MEET_DATE.toISOString()); }), nextMeetDateStr = _f6[0], setNextMeetDateStr = _f6[1];
+        var nextMeetDate = new Date(nextMeetDateStr);
         // 特殊日期也从 localStorage 恢复（带日期对象还原）
         var specDates = loadData('specialDates', null);
         var _f2 = useState(specDates ? specDates.map(function(d) { return Object.assign({}, d, { date: new Date(d.date) }); }) : SPECIAL_DATES);
@@ -574,6 +580,8 @@
         useEffect(function() { saveData('loveStart', loveStartStr); }, [loveStartStr]);
         useEffect(function() { saveData('meetDate', meetDateStr); }, [meetDateStr]);
         useEffect(function() { saveData('firstDate', firstDateStr); }, [firstDateStr]);
+        useEffect(function() { saveData('separateDate', separateDateStr); }, [separateDateStr]);
+        useEffect(function() { saveData('nextMeetDate', nextMeetDateStr); }, [nextMeetDateStr]);
         useEffect(function() { saveData('specialDates', specialDates); }, [specialDates]);
 
         var _g = useState(false), showDiary = _g[0], setShowDiary = _g[1];
@@ -585,6 +593,8 @@
         var _k3 = useState(false), showStartDateEdit = _k3[0], setShowStartDateEdit = _k3[1];
         var _k3b = useState(false), showMeetDateEdit = _k3b[0], setShowMeetDateEdit = _k3b[1];
         var _k3c = useState(false), showFirstDateEdit = _k3c[0], setShowFirstDateEdit = _k3c[1];
+        var _k3d = useState(false), showSeparateDateEdit = _k3d[0], setShowSeparateDateEdit = _k3d[1];
+        var _k3e = useState(false), showNextMeetDateEdit = _k3e[0], setShowNextMeetDateEdit = _k3e[1];
         var _k4 = useState(false), showFight = _k4[0], setShowFight = _k4[1];
         var _k5 = useState(false), showEditFight = _k5[0], setShowEditFight = _k5[1];
         var _l = useState({ title: '', content: '', mood: '😊', color: 'pink' }), newDiary = _l[0], setNewDiary = _l[1];
@@ -602,6 +612,8 @@
         var _t = useState(loveStartStr.split('T')[0]), editStartDate = _t[0], setEditStartDate = _t[1];
         var _t2 = useState(meetDateStr.split('T')[0]), editMeetDate = _t2[0], setEditMeetDate = _t2[1];
         var _t3 = useState(firstDateStr.split('T')[0]), editFirstDate = _t3[0], setEditFirstDate = _t3[1];
+        var _t4 = useState(separateDateStr.split('T')[0]), editSeparateDate = _t4[0], setEditSeparateDate = _t4[1];
+        var _t5 = useState(nextMeetDateStr.split('T')[0]), editNextMeetDate = _t5[0], setEditNextMeetDate = _t5[1];
         var _u = useState({ title: '', reason: '', nextStep: '' }), newFight = _u[0], setNewFight = _u[1];
         var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
@@ -669,6 +681,18 @@
                 setFirstDateStr(new Date(editFirstDate).toISOString());
             }
             setShowFirstDateEdit(false);
+        }
+        function saveSeparateDate() {
+            if (editSeparateDate) {
+                setSeparateDateStr(new Date(editSeparateDate).toISOString());
+            }
+            setShowSeparateDateEdit(false);
+        }
+        function saveNextMeetDate() {
+            if (editNextMeetDate) {
+                setNextMeetDateStr(new Date(editNextMeetDate).toISOString());
+            }
+            setShowNextMeetDateEdit(false);
         }
         function saveEditDate() {
             if (!editingDate || !editingDate.name) return;
@@ -755,6 +779,19 @@
                     ),
                     h('div', { className: 'anniversary-days' }, String(cd.totalDays)),
                     h('div', { className: 'anniversary-days-label' }, '天的甜蜜旅程 💕')
+                ),
+                // 异地恋：上一次分开 & 下一次见面
+                h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 } },
+                    h('div', { className: 'card card-pattern-blue', style: { textAlign: 'center', cursor: 'pointer' }, onClick: function() { setEditSeparateDate(separateDateStr.split('T')[0]); setShowSeparateDateEdit(true); }, title: '点击修改上一次分开日期' },
+                        h('div', { style: { fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 } }, '🚉 上次分开'),
+                        h('div', { style: { fontSize: 32, fontWeight: 900, color: 'var(--error)' } }, String(Math.floor((new Date() - separateDate) / (1000*60*60*24)))),
+                        h('div', { style: { fontSize: 12, color: 'var(--text-secondary)' } }, '天前 · ' + separateDate.toLocaleDateString('zh-CN'))
+                    ),
+                    h('div', { className: 'card card-pattern-purple', style: { textAlign: 'center', cursor: 'pointer' }, onClick: function() { setEditNextMeetDate(nextMeetDateStr.split('T')[0]); setShowNextMeetDateEdit(true); }, title: '点击修改下一次见面日期' },
+                        h('div', { style: { fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 } }, '💞 下次见面'),
+                        h('div', { style: { fontSize: 32, fontWeight: 900, color: 'var(--primary)' } }, String(Math.ceil((nextMeetDate - new Date()) / (1000*60*60*24)))),
+                        h('div', { style: { fontSize: 12, color: 'var(--text-secondary)' } }, '天后 · ' + nextMeetDate.toLocaleDateString('zh-CN'))
+                    )
                 ),
                 // 认识 & 第一次见面 统计
                 h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 } },
@@ -1254,6 +1291,24 @@
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '留言内容'),
                     h('div', { className: 'textarea-wrapper' },
                         h('textarea', { className: 'textarea-field', value: editingMsg ? editingMsg.text : '', onChange: function(e) { if (editingMsg) setEditingMsg(Object.assign({}, editingMsg, { text: e.target.value })); }, style: { minHeight: 80 } })
+                    )
+                )
+            ),
+            // 修改上次分开日期 Modal
+            h(Modal, { show: showSeparateDateEdit, title: '🚉 修改上次分开日期', onClose: function() { setShowSeparateDateEdit(false); }, onConfirm: saveSeparateDate, confirmText: '保存 💾', confirmClass: 'btn-primary-teal' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '选择上一次分开的日期'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', type: 'date', value: editSeparateDate, onChange: function(e) { setEditSeparateDate(e.target.value); } })
+                    )
+                )
+            ),
+            // 修改下次见面日期 Modal
+            h(Modal, { show: showNextMeetDateEdit, title: '💞 修改下次见面日期', onClose: function() { setShowNextMeetDateEdit(false); }, onConfirm: saveNextMeetDate, confirmText: '保存 💾', confirmClass: 'btn-primary-teal' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '选择下一次见面的日期'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', type: 'date', value: editNextMeetDate, onChange: function(e) { setEditNextMeetDate(e.target.value); } })
                     )
                 )
             )
