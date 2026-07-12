@@ -275,6 +275,27 @@
         .message-text { font-size: 14px; line-height: 1.6; }
         .message-time { font-size: 11px; color: var(--text-disabled); margin-top: 4px; text-align: right; }
 
+        /* Fight Records */
+        .fight-list { display: flex; flex-direction: column; gap: 14px; }
+        .fight-entry { background: var(--bg-content); border-radius: 18px; padding: 20px 24px; border-left: 4px solid var(--error); transition: all 0.3s var(--ease); }
+        .fight-entry:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(61,52,40,0.08); }
+        .fight-entry-resolved { border-left-color: var(--success); opacity: 0.7; }
+        .fight-entry-resolved:hover { opacity: 0.9; }
+        .fight-entry-wip { border-left-color: var(--warning); }
+        .fight-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+        .fight-date { font-size: 12px; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
+        .fight-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 50px; letter-spacing: 0.02em; }
+        .fight-status-open { background: #fde4e8; color: var(--error); }
+        .fight-status-wip { background: #fef5e0; color: #b8860b; }
+        .fight-status-done { background: #e0f5ed; color: var(--success); }
+        .fight-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+        .fight-reason { font-size: 14px; line-height: 1.7; color: var(--text-body); margin-bottom: 10px; }
+        .fight-next { background: rgba(224,90,90,0.06); border-radius: 12px; padding: 12px 16px; border: 1px dashed rgba(224,90,90,0.2); }
+        .fight-next-label { font-size: 12px; font-weight: 700; color: var(--error); margin-bottom: 4px; letter-spacing: 0.02em; }
+        .fight-next-text { font-size: 13px; line-height: 1.6; color: var(--text-body); }
+        .fight-entry:hover .fight-btn { opacity: 1; }
+        .fight-btn { opacity: 0; }
+
         /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(40,30,20,0.45); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: var(--bg-content); border-radius: 24px; padding: 48px 48px 32px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(61,52,40,0.15); clip-path: url(#animal-modal-clip); }
@@ -391,6 +412,10 @@
         { id: 4, sender: '大笨蛋', text: '好呀好呀！我带上我新买的小毯子，给你披着~', time: '14:15', isSelf: false },
         { id: 5, sender: '小可爱', text: '你真好 ❤️ 那晚上见！', time: '14:16', isSelf: true },
     ];
+    var INIT_FIGHTS = [
+        { id: 1, date: '2025-03-10', title: '忘记倒垃圾', reason: '因为工作太忙忘记倒垃圾，对方觉得不被重视。', nextStep: '设置手机提醒，每天晚饭后检查一遍垃圾桶。', status: 'resolved' },
+        { id: 2, date: '2025-05-20', title: '约会迟到', reason: '约好6点看电影，迟到了20分钟，手机还没电了联系不上。', nextStep: '以后提前30分钟出门，随身带充电宝。', status: 'wip' },
+    ];
     var SPECIAL_DATES = [
         { icon: '💕', name: '在一起的日子', date: new Date('2024-02-14'), color: 'pink' },
         { icon: '🎂', name: '她的生日', date: new Date('2025-08-15'), color: 'teal' },
@@ -418,6 +443,7 @@
         { key: 'home', icon: '🏠', label: '首页' },
         { key: 'diary', icon: '📖', label: '恋爱日记' },
         { key: 'wishes', icon: '🌟', label: '心愿清单' },
+        { key: 'fights', icon: '😤', label: '吵架记录' },
         { key: 'gallery', icon: '📸', label: '回忆相册' },
         { key: 'dates', icon: '📅', label: '纪念日' },
         { key: 'messages', icon: '💌', label: '留言板' },
@@ -518,6 +544,7 @@
         var _b = useState(function() { return loadData('journal', INIT_JOURNAL); }), journalEntries = _b[0], setJournalEntries = _b[1];
         var _c = useState(function() { return loadData('wishes', INIT_WISHES); }), wishes = _c[0], setWishes = _c[1];
         var _d = useState(function() { return loadData('messages', INIT_MESSAGES); }), messages = _d[0], setMessages = _d[1];
+        var _d2 = useState(function() { return loadData('fights', INIT_FIGHTS); }), fights = _d2[0], setFights = _d2[1];
         var _e = useState(function() { return loadData('coupleName', COUPLE_NAME); }), coupleName = _e[0], setCoupleName = _e[1];
         var _f = useState(function() { return loadData('loveStart', LOVE_START.toISOString()); }), loveStartStr = _f[0], setLoveStartStr = _f[1];
         var loveStart = new Date(loveStartStr);
@@ -533,6 +560,7 @@
         useEffect(function() { saveData('journal', journalEntries); }, [journalEntries]);
         useEffect(function() { saveData('wishes', wishes); }, [wishes]);
         useEffect(function() { saveData('messages', messages); }, [messages]);
+        useEffect(function() { saveData('fights', fights); }, [fights]);
         useEffect(function() { saveData('coupleName', coupleName); }, [coupleName]);
         useEffect(function() { saveData('loveStart', loveStartStr); }, [loveStartStr]);
         useEffect(function() { saveData('specialDates', specialDates); }, [specialDates]);
@@ -544,6 +572,8 @@
         var _k = useState(false), showNameEdit = _k[0], setShowNameEdit = _k[1];
         var _k2 = useState(false), showDateEdit = _k2[0], setShowDateEdit = _k2[1];
         var _k3 = useState(false), showStartDateEdit = _k3[0], setShowStartDateEdit = _k3[1];
+        var _k4 = useState(false), showFight = _k4[0], setShowFight = _k4[1];
+        var _k5 = useState(false), showEditFight = _k5[0], setShowEditFight = _k5[1];
         var _l = useState({ title: '', content: '', mood: '😊', color: 'pink' }), newDiary = _l[0], setNewDiary = _l[1];
         var _m = useState({ title: '', desc: '' }), newWish = _m[0], setNewWish = _m[1];
         var _n = useState(null), editingDiary = _n[0], setEditingDiary = _n[1];
@@ -555,6 +585,8 @@
         var _r2 = useState(true), messageIsSelf = _r2[0], setMessageIsSelf = _r2[1]; // true=自己, false=对方
         var _s = useState(coupleName), editName = _s[0], setEditName = _s[1];
         var _t = useState(loveStartStr.split('T')[0]), editStartDate = _t[0], setEditStartDate = _t[1];
+        var _u = useState({ title: '', reason: '', nextStep: '' }), newFight = _u[0], setNewFight = _u[1];
+        var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
         function toggleWish(id) {
             setWishes(wishes.map(function(w) { return w.id === id ? Object.assign({}, w, { done: !w.done }) : w; }));
@@ -635,6 +667,27 @@
             setMessages(messages.concat([{ id: Date.now(), sender: sender, text: newMessage, time: time, isSelf: messageIsSelf }]));
             setNewMessage('');
             // 不再自动回复，让用户自己切换身份发送
+        }
+        function addFight() {
+            if (!newFight.title || !newFight.reason) return;
+            var today = new Date().toISOString().split('T')[0];
+            setFights([{ id: Date.now(), date: today, title: newFight.title, reason: newFight.reason, nextStep: newFight.nextStep, status: 'open' }].concat(fights));
+            setNewFight({ title: '', reason: '', nextStep: '' });
+            setShowFight(false);
+        }
+        function saveEditFight() {
+            if (!editingFight || !editingFight.title) return;
+            setFights(fights.map(function(f) { return f.id === editingFight.id ? editingFight : f; }));
+            setEditingFight(null);
+            setShowEditFight(false);
+        }
+        function deleteFight(id) {
+            if (confirm('确定要删除这条吵架记录吗？')) {
+                setFights(fights.filter(function(f) { return f.id !== id; }));
+            }
+        }
+        function updateFightStatus(id, status) {
+            setFights(fights.map(function(f) { return f.id === id ? Object.assign({}, f, { status: status }) : f; }));
         }
         function saveMood() {
             if (!todayMood) return;
@@ -851,6 +904,48 @@
             );
         }
 
+        // ====== 吵架记录 ======
+        function renderFights() {
+            var statusLabels = { open: '未解决', wip: '改善中', resolved: '已解决' };
+            var statusColors = { open: 'open', wip: 'wip', resolved: 'done' };
+            return h('div', null,
+                h('div', { className: 'section-title' }, h('span', null, '😤 吵架记录 · 复盘反思')),
+                h('div', { style: { marginBottom: 20, display: 'flex', gap: 12, flexWrap: 'wrap' } },
+                    h('button', { className: 'btn btn-middle btn-primary', onClick: function() { setShowFight(true); } }, '😤 记录吵架'),
+                    h('span', { style: { fontSize: 13, color: 'var(--text-secondary)', alignSelf: 'center' } },
+                        '共 ' + fights.length + ' 次 · ' + fights.filter(function(f) { return f.status === 'resolved'; }).length + ' 次已解决'
+                    )
+                ),
+                h('div', { className: 'fight-list' },
+                    fights.map(function(f) {
+                        return h('div', { key: f.id, className: 'fight-entry fight-entry-' + (f.status === 'resolved' ? 'resolved' : f.status === 'wip' ? 'wip' : '') },
+                            h('div', { className: 'fight-header' },
+                                h('span', { className: 'fight-date' }, f.date),
+                                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                                    h('span', { className: 'fight-status fight-status-' + (statusColors[f.status] || 'open') }, statusLabels[f.status] || '未解决'),
+                                    h('div', { className: 'journal-actions' },
+                                        h('button', { className: 'action-btn fight-btn', onClick: function() { setEditingFight(f); setShowEditFight(true); }, title: '编辑' }, '✏️'),
+                                        h('button', { className: 'action-btn action-btn-danger fight-btn', onClick: function() { deleteFight(f.id); }, title: '删除' }, '🗑️')
+                                    )
+                                )
+                            ),
+                            h('div', { className: 'fight-title' }, f.title),
+                            h('div', { className: 'fight-reason' }, f.reason),
+                            f.nextStep ? h('div', { className: 'fight-next' },
+                                h('div', { className: 'fight-next-label' }, '🎯 下一步行动'),
+                                h('div', { className: 'fight-next-text' }, f.nextStep)
+                            ) : null,
+                            h('div', { style: { marginTop: 12, display: 'flex', gap: 6 } },
+                                f.status !== 'open' ? h('button', { className: 'btn btn-small btn-default', onClick: function() { updateFightStatus(f.id, 'open'); } }, '标记未解决') : null,
+                                f.status !== 'wip' ? h('button', { className: 'btn btn-small btn-default', onClick: function() { updateFightStatus(f.id, 'wip'); } }, '标记改善中') : null,
+                                f.status !== 'resolved' ? h('button', { className: 'btn btn-small btn-primary-teal', onClick: function() { updateFightStatus(f.id, 'resolved'); } }, '✅ 已解决') : null
+                            )
+                        );
+                    })
+                )
+            );
+        }
+
         // ====== 渲染 ======
         var tabContent = null;
         if (activeTab === 'home') tabContent = renderHome();
@@ -859,6 +954,7 @@
         else if (activeTab === 'gallery') tabContent = renderGallery();
         else if (activeTab === 'dates') tabContent = renderDates();
         else if (activeTab === 'messages') tabContent = renderMessages();
+        else if (activeTab === 'fights') tabContent = renderFights();
         var names = coupleName.split(' & ');
 
         return h('div', { className: 'app-container' },
@@ -1022,6 +1118,48 @@
                                 style: { padding: '6px 12px', fontSize: 12 },
                             }, c);
                         })
+                    )
+                )
+            ),
+            // 新增吵架 Modal
+            h(Modal, { show: showFight, title: '😤 记录吵架', onClose: function() { setShowFight(false); }, onConfirm: addFight, confirmText: '记录 📝', confirmClass: 'btn-primary' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '吵架原因'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', placeholder: '为什么吵架？', value: newFight.title, onChange: function(e) { setNewFight(Object.assign({}, newFight, { title: e.target.value })); } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '详细经过'),
+                    h('div', { className: 'textarea-wrapper' },
+                        h('textarea', { className: 'textarea-field', placeholder: '发生了什么？各自的想法是什么？', value: newFight.reason, onChange: function(e) { setNewFight(Object.assign({}, newFight, { reason: e.target.value })); }, style: { minHeight: 100 } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '下一步行动（如何解决）'),
+                    h('div', { className: 'textarea-wrapper' },
+                        h('textarea', { className: 'textarea-field', placeholder: '双方约定怎么做来避免下次再吵？', value: newFight.nextStep, onChange: function(e) { setNewFight(Object.assign({}, newFight, { nextStep: e.target.value })); }, style: { minHeight: 80 } })
+                    )
+                )
+            ),
+            // 编辑吵架 Modal
+            h(Modal, { show: showEditFight, title: '📝 编辑吵架记录', onClose: function() { setShowEditFight(false); }, onConfirm: saveEditFight, confirmText: '保存修改 💾', confirmClass: 'btn-primary-teal' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '吵架原因'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', value: editingFight ? editingFight.title : '', onChange: function(e) { if (editingFight) setEditingFight(Object.assign({}, editingFight, { title: e.target.value })); } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '详细经过'),
+                    h('div', { className: 'textarea-wrapper' },
+                        h('textarea', { className: 'textarea-field', value: editingFight ? editingFight.reason : '', onChange: function(e) { if (editingFight) setEditingFight(Object.assign({}, editingFight, { reason: e.target.value })); }, style: { minHeight: 100 } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '下一步行动'),
+                    h('div', { className: 'textarea-wrapper' },
+                        h('textarea', { className: 'textarea-field', value: editingFight ? editingFight.nextStep : '', onChange: function(e) { if (editingFight) setEditingFight(Object.assign({}, editingFight, { nextStep: e.target.value })); }, style: { minHeight: 80 } })
                     )
                 )
             )
