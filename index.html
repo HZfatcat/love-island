@@ -219,7 +219,7 @@
         .journal-entry-yellow { border-left-color: var(--app-yellow); }
         .journal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .journal-date { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
-        .journal-mood { font-size: 18px; }
+        .journal-mood { font-size: 22px; display: inline-flex; align-items: center; gap: 4px; }
         .journal-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
         .journal-text { font-size: 14px; line-height: 1.7; color: var(--text-body); }
         .journal-actions { display: flex; gap: 6px; flex-shrink: 0; }
@@ -1176,11 +1176,12 @@
                 ),
                 h('div', { className: 'journal-list' },
                     journalEntries.map(function(entry) {
+                        var moodLabels = { '😊': '开心', '🥰': '甜蜜', '😍': '超爱', '😌': '平静', '🥺': '想你', '🎄': '圣诞', '💕': '甜蜜' };
                         return h('div', { key: entry.id, className: 'journal-entry journal-entry-' + entry.color },
                             h('div', { className: 'journal-header' },
                                 h('span', { className: 'journal-date' }, entry.date),
                                 h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-                                    h('span', { className: 'journal-mood' }, entry.mood),
+                                    h('span', { className: 'journal-mood' }, entry.mood + ' ' + (moodLabels[entry.mood] || '')),
                                     h('div', { className: 'journal-actions' },
                                         h('button', { className: 'action-btn', onClick: function() { setEditingDiary(entry); setShowEditDiary(true); }, title: '编辑' }, '✏️'),
                                         h('button', { className: 'action-btn action-btn-danger', onClick: function() { deleteDiary(entry.id); }, title: '删除' }, '🗑️')
