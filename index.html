@@ -390,28 +390,34 @@
 
     <div id="root"></div>
 
-    <script src="//code.bdstatic.com/npm/leancloud-storage@4.13.2/dist/av-min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script>
     // ====== 纯 React.createElement 实现，不依赖 Babel/JSX ======
 
     const { createElement: h, useState, useEffect, useRef } = React;
 
-    // ====== LeanCloud 配置（修改这里） ======
-    // 去 https://console.leancloud.cn 注册 → 创建应用 → 获取 AppID 和 AppKey
-    var LC_APP_ID = '';
-    var LC_APP_KEY = '';
-    var LC_READY = false;
-    if (typeof AV !== 'undefined' && LC_APP_ID && LC_APP_KEY) {
-        AV.init({ appId: LC_APP_ID, appKey: LC_APP_KEY });
-        LC_READY = true;
+    // ====== Firebase 配置（修改这里） ======
+    // 去 https://firebase.google.com 用 Google 账号登录 → 创建项目 → 添加 Web 应用 → 复制配置
+    var FIREBASE_CONFIG = {
+        apiKey: "",
+        authDomain: "",
+        databaseURL: "",
+        projectId: "",
+        storageBucket: "",
+        messagingSenderId: "",
+        appId: ""
+    };
+    var FB_READY = false;
+    if (typeof firebase !== 'undefined' && FIREBASE_CONFIG.databaseURL) {
+        firebase.initializeApp(FIREBASE_CONFIG);
+        FB_READY = true;
     }
 
-    // ====== 数据存储（LeanCloud + localStorage 双保险） ======
-    var LC_CACHE = {};
-    var LC_LOADING = {};
+    // ====== 数据存储（Firebase + localStorage 双保险） ======
+    var FB_SYNCING = {};
 
     function loadData(key, fallback) {
-        // 先尝试从 localStorage 读取（本地缓存 + 离线可用）
         try {
             var raw = localStorage.getItem('love_island_' + key);
             if (raw) {
@@ -426,55 +432,31 @@
     }
 
     function saveData(key, data) {
-        // 保存到 localStorage（本地缓存）
         try { localStorage.setItem('love_island_' + key, JSON.stringify(data)); } catch(e) {}
-        // 同步到 LeanCloud（如果已配置）
-        if (!LC_READY) return;
-        if (LC_LOADING[key]) return; // 正在加载中，跳过回写避免覆盖
-        var AV = window.AV;
-        var query = new AV.Query('AppData');
-        query.equalTo('key', key);
-        query.find().then(function(results) {
-            if (results.length > 0) {
-                results[0].set('value', JSON.stringify(data));
-                return results[0].save();
-            } else {
-                var obj = new (AV.Object.extend('AppData'))();
-                obj.set('key', key);
-                obj.set('value', JSON.stringify(data));
-                return obj.save();
-            }
-        }).catch(function(err) {
-            console.log('LeanCloud 保存失败（不影响本地数据）:', err);
-        });
+        if (!FB_READY) return;
+        if (FB_SYNCING[key]) return;
+        firebase.database().ref('love_island/' + key).set(data);
     }
 
-    // 从 LeanCloud 拉取数据合并到 localStorage
-    function syncFromCloud() {
-        if (!LC_READY) return;
-        var AV = window.AV;
-        var query = new AV.Query('AppData');
-        query.find().then(function(results) {
-            results.forEach(function(obj) {
-                var key = obj.get('key');
-                var value = obj.get('value');
-                if (key && value) {
-                    LC_LOADING[key] = true;
-                    try {
-                        var parsed = JSON.parse(value);
-                        localStorage.setItem('love_island_' + key, value);
-                        // 更新特殊日期的日期对象
-                        if (key === 'specialDates' && Array.isArray(parsed)) {
-                            parsed.forEach(function(d) { if (d.date) d.date = new Date(d.date); });
-                        }
-                        // 更新 React 状态 - 通过自定义事件通知
-                        window.dispatchEvent(new CustomEvent('lc-sync', { detail: { key: key, data: parsed } }));
-                    } catch(e) {}
-                    delete LC_LOADING[key];
-                }
+    // 监听 Firebase 数据变化
+    function initFirebaseSync(callback) {
+        if (!FB_READY) return;
+        var keys = ['journal', 'wishes', 'messages', 'fights', 'coupleName', 'loveStart',
+                     'meetDate', 'firstDate', 'separateDate', 'nextMeetDate', 'specialDates'];
+        keys.forEach(function(key) {
+            firebase.database().ref('love_island/' + key).on('value', function(snapshot) {
+                var data = snapshot.val();
+                if (data === null) return;
+                FB_SYNCING[key] = true;
+                try {
+                    localStorage.setItem('love_island_' + key, JSON.stringify(data));
+                    if (key === 'specialDates' && Array.isArray(data)) {
+                        data.forEach(function(d) { if (d.date) d.date = new Date(d.date); });
+                    }
+                    callback(key, data);
+                } catch(e) {}
+                setTimeout(function() { delete FB_SYNCING[key]; }, 500);
             });
-        }).catch(function(err) {
-            console.log('LeanCloud 同步失败:', err);
         });
     }
 
@@ -787,14 +769,10 @@
         useEffect(function() { saveData('nextMeetDate', nextMeetDateStr); }, [nextMeetDateStr]);
         useEffect(function() { saveData('specialDates', specialDates); }, [specialDates]);
 
-        // 启动时从 LeanCloud 拉取数据，并监听云端变化
+        // 启动 Firebase 实时监听
         useEffect(function() {
-            if (!LC_READY) return;
-            syncFromCloud();
-            setCloudStatus('synced');
-            function handler(e) {
-                var key = e.detail.key;
-                var data = e.detail.data;
+            if (!FB_READY) return;
+            initFirebaseSync(function(key, data) {
                 if (key === 'journal') setJournalEntries(data);
                 else if (key === 'wishes') setWishes(data);
                 else if (key === 'messages') setMessages(data);
@@ -806,13 +784,8 @@
                 else if (key === 'separateDate') { setSeparateDateStr(data); }
                 else if (key === 'nextMeetDate') { setNextMeetDateStr(data); }
                 else if (key === 'specialDates') { setSpecialDates(data.map(function(d) { return Object.assign({}, d, { date: new Date(d.date) }); })); }
-            }
-            window.addEventListener('lc-sync', handler);
-            var timer = setInterval(syncFromCloud, 30000);
-            return function() {
-                window.removeEventListener('lc-sync', handler);
-                clearInterval(timer);
-            };
+            });
+            setCloudStatus('synced');
         }, []);
 
         var _g = useState(false), showDiary = _g[0], setShowDiary = _g[1];
@@ -848,7 +821,7 @@
         var _u = useState(0), calMonth = _u[0], setCalMonth = _u[1];
         var _v = useState(2026), calYear = _v[0], setCalYear = _v[1];
         var _w = useState(null), calPopup = _w[0], setCalPopup = _w[1];
-        var _x = useState(LC_READY ? 'syncing' : 'offline'), cloudStatus = _x[0], setCloudStatus = _x[1];
+        var _x = useState(FB_READY ? 'synced' : 'offline'), cloudStatus = _x[0], setCloudStatus = _x[1];
         var _u = useState({ title: '', reason: '', nextStep: '' }), newFight = _u[0], setNewFight = _u[1];
         var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
@@ -1488,7 +1461,7 @@
                         h('div', { className: 'header-stat-num' }, String(cd.totalDays)),
                         h('div', { className: 'header-stat-label' }, '在一起的天数 ❤️')
                     ),
-                    LC_READY ? h('div', { className: 'header-stat', title: cloudStatus === 'synced' ? '云端已同步' : '同步中...' },
+                    FB_READY ? h('div', { className: 'header-stat', title: cloudStatus === 'synced' ? '云端已同步' : '同步中...' },
                         h('div', { style: { fontSize: 14, color: cloudStatus === 'synced' ? 'var(--success)' : 'var(--warning)' } }, cloudStatus === 'synced' ? '☁️' : '🔄'),
                         h('div', { className: 'header-stat-label' }, cloudStatus === 'synced' ? '已同步' : '同步中')
                     ) : null
