@@ -873,7 +873,7 @@
         var photoInputRef = useRef(null);
         var _p2 = useState(false), showPhotoUpload = _p2[0], setShowPhotoUpload = _p2[1];
         var _p3 = useState({ data: '', name: '', title: '', desc: '', date: new Date().toISOString().split('T')[0] }), pendingPhoto = _p3[0], setPendingPhoto = _p3[1];
-        var _u = useState({ title: '', reason: '', nextStep: '', date: new Date().toISOString().split('T')[0] }), newFight = _u[0], setNewFight = _u[1];
+        var _u = useState({ title: '', cause: '', reason: '', nextStep: '', date: new Date().toISOString().split('T')[0] }), newFight = _u[0], setNewFight = _u[1];
         var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
         function toggleWish(id) {
@@ -1000,8 +1000,8 @@
         }
         function addFight() {
             if (!newFight.title || !newFight.reason) return;
-            setFights([{ id: Date.now(), date: newFight.date || new Date().toISOString().split('T')[0], title: newFight.title, reason: newFight.reason, nextStep: newFight.nextStep, status: 'open' }].concat(fights));
-            setNewFight({ title: '', reason: '', nextStep: '', date: new Date().toISOString().split('T')[0] });
+            setFights([{ id: Date.now(), date: newFight.date || new Date().toISOString().split('T')[0], title: newFight.title, cause: newFight.cause, reason: newFight.reason, nextStep: newFight.nextStep, status: 'open' }].concat(fights));
+            setNewFight({ title: '', cause: '', reason: '', nextStep: '', date: new Date().toISOString().split('T')[0] });
             setShowFight(false);
         }
         function saveEditFight() {
@@ -1693,6 +1693,7 @@
                                 )
                             ),
                             h('div', { className: 'fight-title' }, f.title),
+                            f.cause ? h('div', { style: { fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6, fontWeight: 600 } }, '💥 ' + f.cause) : null,
                             h('div', { className: 'fight-reason' }, f.reason),
                             f.nextStep ? h('div', { className: 'fight-next' },
                                 h('div', { className: 'fight-next-label' }, '🎯 下一步行动'),
@@ -2025,6 +2026,12 @@
                     )
                 ),
                 h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '吵架原因'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', placeholder: '为什么会吵架？', value: newFight.cause, onChange: function(e) { setNewFight(Object.assign({}, newFight, { cause: e.target.value })); } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '日期'),
                     h('div', { className: 'input-wrapper input-wrapper-middle' },
                         h('input', { className: 'input-field', type: 'date', value: newFight.date, onChange: function(e) { setNewFight(Object.assign({}, newFight, { date: e.target.value })); } })
@@ -2060,7 +2067,7 @@
                 h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '吵架原因'),
                     h('div', { className: 'input-wrapper input-wrapper-middle' },
-                        h('input', { className: 'input-field', value: editingFight ? editingFight.title : '', onChange: function(e) { if (editingFight) setEditingFight(Object.assign({}, editingFight, { title: e.target.value })); } })
+                        h('input', { className: 'input-field', value: editingFight ? editingFight.cause : '', onChange: function(e) { if (editingFight) setEditingFight(Object.assign({}, editingFight, { cause: e.target.value })); } })
                     )
                 ),
                 h('div', { style: { marginBottom: 16 } },
