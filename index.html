@@ -219,6 +219,14 @@
         .journal-mood { font-size: 18px; }
         .journal-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
         .journal-text { font-size: 14px; line-height: 1.7; color: var(--text-body); }
+        .journal-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .action-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px 6px; border-radius: 8px; transition: all 0.2s var(--ease); color: var(--text-secondary); font-family: inherit; opacity: 0; }
+        .journal-entry:hover .action-btn { opacity: 1; }
+        .wish-item:hover .action-btn { opacity: 1; }
+        .action-btn:hover { background: rgba(114,93,66,0.1); color: var(--text-body); }
+        .action-btn-danger:hover { background: rgba(224,90,90,0.12); color: var(--error); }
+        .name-editable { cursor: pointer; transition: all 0.2s var(--ease); display: inline-flex; align-items: center; gap: 4px; }
+        .name-editable:hover { color: var(--primary); }
 
         /* Wish List */
         .wish-list { display: flex; flex-direction: column; gap: 12px; }
@@ -335,6 +343,25 @@
     // ====== 纯 React.createElement 实现，不依赖 Babel/JSX ======
 
     const { createElement: h, useState, useEffect, useRef } = React;
+
+    // ====== localStorage 持久化 ======
+    function loadData(key, fallback) {
+        try {
+            var raw = localStorage.getItem('love_island_' + key);
+            if (raw) {
+                var parsed = JSON.parse(raw);
+                // 恢复日期对象（特殊日期需要）
+                if (key === 'specialDates') {
+                    parsed.forEach(function(d) { d.date = new Date(d.date); });
+                }
+                return parsed;
+            }
+        } catch(e) {}
+        return fallback;
+    }
+    function saveData(key, data) {
+        try { localStorage.setItem('love_island_' + key, JSON.stringify(data)); } catch(e) {}
+    }
 
     // ====== DATA ======
     var LOVE_START = new Date('2024-02-14T00:00:00');
@@ -467,17 +494,33 @@
         var _a = useState('home'), activeTab = _a[0], setActiveTab = _a[1];
         var cd = useCountdown(LOVE_START);
 
-        var _b = useState(INIT_JOURNAL), journalEntries = _b[0], setJournalEntries = _b[1];
-        var _c = useState(INIT_WISHES), wishes = _c[0], setWishes = _c[1];
-        var _d = useState(INIT_MESSAGES), messages = _d[0], setMessages = _d[1];
+        // 从 localStorage 恢复数据，无数据则用初始值
+        var _b = useState(function() { return loadData('journal', INIT_JOURNAL); }), journalEntries = _b[0], setJournalEntries = _b[1];
+        var _c = useState(function() { return loadData('wishes', INIT_WISHES); }), wishes = _c[0], setWishes = _c[1];
+        var _d = useState(function() { return loadData('messages', INIT_MESSAGES); }), messages = _d[0], setMessages = _d[1];
+        var _e = useState(function() { return loadData('coupleName', COUPLE_NAME); }), coupleName = _e[0], setCoupleName = _e[1];
+        var _f = useState(function() { return loadData('loveStart', LOVE_START.toISOString()); }), loveStartStr = _f[0], setLoveStartStr = _f[1];
+        var loveStart = new Date(loveStartStr);
 
-        var _e = useState(false), showDiary = _e[0], setShowDiary = _e[1];
-        var _f = useState(false), showWish = _f[0], setShowWish = _f[1];
-        var _g = useState({ title: '', content: '', mood: '😊', color: 'pink' }), newDiary = _g[0], setNewDiary = _g[1];
-        var _h = useState({ title: '', desc: '' }), newWish = _h[0], setNewWish = _h[1];
-        var _i = useState(null), todayMood = _i[0], setTodayMood = _i[1];
-        var _j = useState(''), moodNote = _j[0], setMoodNote = _j[1];
-        var _k = useState(''), newMessage = _k[0], setNewMessage = _k[1];
+        // 自动保存到 localStorage
+        useEffect(function() { saveData('journal', journalEntries); }, [journalEntries]);
+        useEffect(function() { saveData('wishes', wishes); }, [wishes]);
+        useEffect(function() { saveData('messages', messages); }, [messages]);
+        useEffect(function() { saveData('coupleName', coupleName); }, [coupleName]);
+
+        var _g = useState(false), showDiary = _g[0], setShowDiary = _g[1];
+        var _h = useState(false), showWish = _h[0], setShowWish = _h[1];
+        var _i = useState(false), showEditDiary = _i[0], setShowEditDiary = _i[1];
+        var _j = useState(false), showEditWish = _j[0], setShowEditWish = _j[1];
+        var _k = useState(false), showNameEdit = _k[0], setShowNameEdit = _k[1];
+        var _l = useState({ title: '', content: '', mood: '😊', color: 'pink' }), newDiary = _l[0], setNewDiary = _l[1];
+        var _m = useState({ title: '', desc: '' }), newWish = _m[0], setNewWish = _m[1];
+        var _n = useState(null), editingDiary = _n[0], setEditingDiary = _n[1];
+        var _o = useState(null), editingWish = _o[0], setEditingWish = _o[1];
+        var _p = useState(null), todayMood = _p[0], setTodayMood = _p[1];
+        var _q = useState(''), moodNote = _q[0], setMoodNote = _q[1];
+        var _r = useState(''), newMessage = _r[0], setNewMessage = _r[1];
+        var _s = useState(coupleName), editName = _s[0], setEditName = _s[1];
 
         function toggleWish(id) {
             setWishes(wishes.map(function(w) { return w.id === id ? Object.assign({}, w, { done: !w.done }) : w; }));
@@ -492,22 +535,50 @@
             setNewDiary({ title: '', content: '', mood: '😊', color: 'pink' });
             setShowDiary(false);
         }
+        function saveEditDiary() {
+            if (!editingDiary || !editingDiary.title || !editingDiary.content) return;
+            setJournalEntries(journalEntries.map(function(e) { return e.id === editingDiary.id ? editingDiary : e; }));
+            setEditingDiary(null);
+            setShowEditDiary(false);
+        }
+        function deleteDiary(id) {
+            if (confirm('确定要删除这篇日记吗？')) {
+                setJournalEntries(journalEntries.filter(function(e) { return e.id !== id; }));
+            }
+        }
         function addWish() {
             if (!newWish.title) return;
             setWishes(wishes.concat([{ id: Date.now(), title: newWish.title, desc: newWish.desc, done: false, liked: false }]));
             setNewWish({ title: '', desc: '' });
             setShowWish(false);
         }
+        function saveEditWish() {
+            if (!editingWish || !editingWish.title) return;
+            setWishes(wishes.map(function(w) { return w.id === editingWish.id ? editingWish : w; }));
+            setEditingWish(null);
+            setShowEditWish(false);
+        }
+        function deleteWish(id) {
+            if (confirm('确定要删除这个心愿吗？')) {
+                setWishes(wishes.filter(function(w) { return w.id !== id; }));
+            }
+        }
+        function saveCoupleName() {
+            if (editName.trim()) {
+                setCoupleName(editName);
+            }
+            setShowNameEdit(false);
+        }
         function sendMessage() {
             if (!newMessage.trim()) return;
             var now = new Date();
             var time = formatTime(now);
-            setMessages(messages.concat([{ id: Date.now(), sender: COUPLE_SHORT[0], text: newMessage, time: time, isSelf: true }]));
+            setMessages(messages.concat([{ id: Date.now(), sender: coupleName.split(' & ')[0] || '我', text: newMessage, time: time, isSelf: true }]));
             setNewMessage('');
             var replies = ['你说得对！我也这么觉得 😊', '好呀好呀，都听你的~', '你真好，我好喜欢你 ❤️', '今天也很想你哦 💕', '嗯嗯！我们一起加油！'];
             setTimeout(function() {
                 var reply = replies[Math.floor(Math.random() * replies.length)];
-                setMessages(function(prev) { return prev.concat([{ id: Date.now() + 1, sender: COUPLE_SHORT[1], text: reply, time: time, isSelf: false }]); });
+                setMessages(function(prev) { return prev.concat([{ id: Date.now() + 1, sender: coupleName.split(' & ')[1] || 'TA', text: reply, time: time, isSelf: false }]); });
             }, 1500);
         }
         function saveMood() {
@@ -524,16 +595,15 @@
 
         // ====== 首页 ======
         function renderHome() {
+            var names = coupleName.split(' & ');
             return h('div', null,
-                // Anniversary Hero
                 h('div', { className: 'anniversary-hero', style: { marginBottom: 28 } },
                     h('div', { className: 'anniversary-hearts' }, '💕💗💖'),
-                    h('div', { className: 'anniversary-title' }, COUPLE_NAME + ' 的爱情小岛'),
-                    h('div', { className: 'anniversary-sub' }, '从 ' + LOVE_START.toLocaleDateString('zh-CN') + ' 开始，我们携手走过了'),
+                    h('div', { className: 'anniversary-title' }, coupleName + ' 的爱情小岛'),
+                    h('div', { className: 'anniversary-sub' }, '从 ' + loveStart.toLocaleDateString('zh-CN') + ' 开始，我们携手走过了'),
                     h('div', { className: 'anniversary-days' }, String(cd.totalDays)),
                     h('div', { className: 'anniversary-days-label' }, '天的甜蜜旅程 💕')
                 ),
-                // Countdown
                 h('div', { className: 'card card-pattern-default', style: { marginBottom: 24, cursor: 'default' } },
                     h('div', { style: { fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 16, textAlign: 'center' } }, '🌟 距离下一个纪念日还有'),
                     h('div', { className: 'countdown-grid' },
@@ -543,7 +613,6 @@
                         h('div', { className: 'countdown-item' }, h('div', { className: 'countdown-number' }, String(cd.seconds).padStart(2,'0')), h('div', { className: 'countdown-label' }, '秒'))
                     )
                 ),
-                // Mood
                 h('div', { className: 'card card-pattern-pink', style: { marginBottom: 24, cursor: 'default' } },
                     h('div', { style: { fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 16, textAlign: 'center' } }, '🌸 今天的心情'),
                     !todayMood ?
@@ -570,7 +639,6 @@
                         :
                         h('p', { style: { textAlign: 'center', color: 'var(--text-secondary)', fontSize: 14 } }, '今天的心情已记录 ~ 明天再来呀 💕')
                 ),
-                // Stats
                 h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 } },
                     h('div', { className: 'card card-solid-teal', style: { textAlign: 'center', cursor: 'default' } },
                         h('div', { style: { fontSize: 36, marginBottom: 8 } }, '📖'),
@@ -591,7 +659,7 @@
             );
         }
 
-        // ====== 日记 ======
+        // ====== 日记（含编辑/删除） ======
         function renderDiary() {
             return h('div', null,
                 h('div', { className: 'section-title' }, h('span', null, '📖 恋爱日记')),
@@ -603,7 +671,13 @@
                         return h('div', { key: entry.id, className: 'journal-entry journal-entry-' + entry.color },
                             h('div', { className: 'journal-header' },
                                 h('span', { className: 'journal-date' }, entry.date),
-                                h('span', { className: 'journal-mood' }, entry.mood)
+                                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                                    h('span', { className: 'journal-mood' }, entry.mood),
+                                    h('div', { className: 'journal-actions' },
+                                        h('button', { className: 'action-btn', onClick: function() { setEditingDiary(entry); setShowEditDiary(true); }, title: '编辑' }, '✏️'),
+                                        h('button', { className: 'action-btn action-btn-danger', onClick: function() { deleteDiary(entry.id); }, title: '删除' }, '🗑️')
+                                    )
+                                )
                             ),
                             h('div', { className: 'journal-title' }, entry.title),
                             h('div', { className: 'journal-text' }, entry.content)
@@ -613,7 +687,7 @@
             );
         }
 
-        // ====== 心愿 ======
+        // ====== 心愿（含编辑/删除） ======
         function renderWishes() {
             return h('div', null,
                 h('div', { className: 'section-title' }, h('span', null, '🌟 我们的心愿清单')),
@@ -628,7 +702,11 @@
                                 h('div', { className: 'wish-title' + (w.done ? ' wish-title-done' : '') }, w.title),
                                 h('div', { className: 'wish-desc' }, w.desc)
                             ),
-                            h('span', { className: 'wish-heart' + (w.liked ? ' wish-heart-liked' : ''), onClick: function() { toggleLike(w.id); } }, w.liked ? '❤️' : '🤍')
+                            h('div', { className: 'journal-actions' },
+                                h('span', { className: 'wish-heart' + (w.liked ? ' wish-heart-liked' : ''), onClick: function() { toggleLike(w.id); } }, w.liked ? '❤️' : '🤍'),
+                                h('button', { className: 'action-btn', onClick: function() { setEditingWish(w); setShowEditWish(true); }, title: '编辑' }, '✏️'),
+                                h('button', { className: 'action-btn action-btn-danger', onClick: function() { deleteWish(w.id); }, title: '删除' }, '🗑️')
+                            )
                         );
                     })
                 )
@@ -700,6 +778,7 @@
         else if (activeTab === 'gallery') tabContent = renderGallery();
         else if (activeTab === 'dates') tabContent = renderDates();
         else if (activeTab === 'messages') tabContent = renderMessages();
+        var names = coupleName.split(' & ');
 
         return h('div', { className: 'app-container' },
             // Header
@@ -708,7 +787,10 @@
                     h('span', { className: 'site-logo-icon' }, '🏝️'),
                     h('div', null,
                         h('div', { className: 'site-logo-text' }, 'Love Island'),
-                        h('div', { className: 'site-logo-sub' }, COUPLE_NAME + ' · 甜蜜小岛')
+                        h('div', { className: 'site-logo-sub name-editable', onClick: function() { setEditName(coupleName); setShowNameEdit(true); }, title: '点击修改昵称' },
+                            coupleName + ' · 甜蜜小岛',
+                            h('span', { style: { fontSize: 11, opacity: 0.5 } }, ' ✏️')
+                        )
                     )
                 ),
                 h('div', { className: 'header-stats' },
@@ -729,7 +811,7 @@
             // Footer
             h('div', { className: 'footer' },
                 h('p', null, '💕 Love Island - 我们的甜蜜小岛 💕'),
-                h('p', { style: { marginTop: 4 } }, COUPLE_NAME + ' · 已相爱 ' + cd.totalDays + ' 天'),
+                h('p', { style: { marginTop: 4 } }, coupleName + ' · 已相爱 ' + cd.totalDays + ' 天'),
                 h('p', { style: { marginTop: 4, fontSize: 12 } }, 'Made with ❤️ for us')
             ),
             // Modals
@@ -771,6 +853,45 @@
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '描述（可选）'),
                     h('div', { className: 'textarea-wrapper' },
                         h('textarea', { className: 'textarea-field', placeholder: '详细说说...', value: newWish.desc, onChange: function(e) { setNewWish(Object.assign({}, newWish, { desc: e.target.value })); }, style: { minHeight: 60 } })
+                    )
+                )
+            ),
+            // 编辑日记 Modal
+            h(Modal, { show: showEditDiary, title: '📝 编辑日记', onClose: function() { setShowEditDiary(false); }, onConfirm: saveEditDiary, confirmText: '保存修改 💾', confirmClass: 'btn-primary-teal' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '标题'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', value: editingDiary ? editingDiary.title : '', onChange: function(e) { if (editingDiary) setEditingDiary(Object.assign({}, editingDiary, { title: e.target.value })); } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '内容'),
+                    h('div', { className: 'textarea-wrapper' },
+                        h('textarea', { className: 'textarea-field', value: editingDiary ? editingDiary.content : '', onChange: function(e) { if (editingDiary) setEditingDiary(Object.assign({}, editingDiary, { content: e.target.value })); }, style: { minHeight: 120 } })
+                    )
+                )
+            ),
+            // 编辑心愿 Modal
+            h(Modal, { show: showEditWish, title: '🌟 编辑心愿', onClose: function() { setShowEditWish(false); }, onConfirm: saveEditWish, confirmText: '保存修改 💾', confirmClass: 'btn-primary-pink' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '心愿名称'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', value: editingWish ? editingWish.title : '', onChange: function(e) { if (editingWish) setEditingWish(Object.assign({}, editingWish, { title: e.target.value })); } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '描述'),
+                    h('div', { className: 'textarea-wrapper' },
+                        h('textarea', { className: 'textarea-field', value: editingWish ? editingWish.desc : '', onChange: function(e) { if (editingWish) setEditingWish(Object.assign({}, editingWish, { desc: e.target.value })); }, style: { minHeight: 60 } })
+                    )
+                )
+            ),
+            // 修改昵称 Modal
+            h(Modal, { show: showNameEdit, title: '💕 修改昵称', onClose: function() { setShowNameEdit(false); }, onConfirm: saveCoupleName, confirmText: '保存 💾', confirmClass: 'btn-primary-teal' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '你们的昵称（格式：你的昵称 & TA的昵称）'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', value: editName, onChange: function(e) { setEditName(e.target.value); }, placeholder: '如：小可爱 & 大笨蛋' })
                     )
                 )
             )
