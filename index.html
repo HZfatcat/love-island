@@ -396,9 +396,12 @@
 
     const { createElement: h, useState, useEffect, useRef } = React;
 
-    // ====== 云端同步（使用 jsonblob.com 免费 API，无需注册） ======
-    var CLOUD_BLOB_ID = localStorage.getItem('love_island_cloud_id') || '';
-    var CLOUD_BLOB_URL = CLOUD_BLOB_ID ? 'https://jsonblob.com/api/jsonBlob/' + CLOUD_BLOB_ID : '';
+    // ====== 云端同步（使用 GitHub API，需要你填一次令牌） ======
+    // 令牌只保存在你的浏览器 localStorage，不会上传到 GitHub 代码
+    var GITHUB_TOKEN = localStorage.getItem('love_island_gh_token') || '';
+    var GITHUB_REPO = 'HZfatcat/love-island';
+    var GITHUB_DATA_URL = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/data.json';
+    var GITHUB_RAW_URL = 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/master/data.json';
     var CLOUD_SYNCING = {};
 
     function loadData(key, fallback) {
@@ -432,33 +435,25 @@
     }
 
     function uploadToCloud() {
+        if (!GITHUB_TOKEN) return;
         var data = getAllData();
-        // 如果没有 blob ID，先创建一个
-        if (!CLOUD_BLOB_ID) {
-            CLOUD_BLOB_ID = 'love' + Date.now() + Math.random().toString(36).slice(2, 8);
-            CLOUD_BLOB_URL = 'https://jsonblob.com/api/jsonBlob/' + CLOUD_BLOB_ID;
-            localStorage.setItem('love_island_cloud_id', CLOUD_BLOB_ID);
-        }
-        fetch(CLOUD_BLOB_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        }).then(function(r) {
-            return r.json();
-        }).then(function() {}).catch(function(err) {
-            console.log('云端上传失败:', err);
-        });
+        var content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+        fetch(GITHUB_DATA_URL, {
+            headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
+        }).then(function(r) { return r.json(); }).then(function(res) {
+            var sha = res.sha || '';
+            return fetch(GITHUB_DATA_URL, {
+                method: 'PUT',
+                headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+                body: JSON.stringify({ message: '💕 数据同步', content: content, sha: sha })
+            });
+        }).then(function(r) { return r.json(); }).then(function() {}).catch(function() {});
     }
 
     function downloadFromCloud() {
-        if (!CLOUD_BLOB_ID) return Promise.resolve(false);
-        // 先尝试读取，如果 404 说明是首次，先上传
-        return fetch(CLOUD_BLOB_URL + '?t=' + Date.now()).then(function(r) {
-            if (r.status === 404) {
-                uploadToCloud();
-                return Promise.reject('new');
-            }
-            if (!r.ok) throw new Error('Failed');
+        if (!GITHUB_TOKEN) return Promise.resolve(false);
+        return fetch(GITHUB_RAW_URL + '?t=' + Date.now()).then(function(r) {
+            if (!r.ok) throw new Error('No data');
             return r.json();
         }).then(function(data) {
             var keys = Object.keys(data);
@@ -476,10 +471,7 @@
                 setTimeout(function() { delete CLOUD_SYNCING[key]; }, 500);
             });
             return true;
-        }).catch(function(e) {
-            if (e !== 'new') console.log('云端下载失败:', e);
-            return false;
-        });
+        }).catch(function() { return false; });
     }
 
     // ====== DATA ======
@@ -793,6 +785,7 @@
 
         // 启动云端同步
         useEffect(function() {
+            if (!GITHUB_TOKEN) return;
             downloadFromCloud().then(function(ok) {
                 if (ok) setCloudStatus(true);
             });
@@ -859,6 +852,8 @@
         var _v = useState(2026), calYear = _v[0], setCalYear = _v[1];
         var _w = useState(null), calPopup = _w[0], setCalPopup = _w[1];
         var _x = useState(false), cloudStatus = _x[0], setCloudStatus = _x[1];
+        var _y = useState(false), showTokenInput = _y[0], setShowTokenInput = _y[1];
+        var _z = useState(GITHUB_TOKEN), editToken = _z[0], setEditToken = _z[1];
         var _u = useState({ title: '', reason: '', nextStep: '' }), newFight = _u[0], setNewFight = _u[1];
         var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
@@ -1008,6 +1003,14 @@
         }
         function handleKeyDown(e) {
             if (e.key === 'Enter') sendMessage();
+        }
+        function saveToken() {
+            if (editToken.trim()) {
+                localStorage.setItem('love_island_gh_token', editToken.trim());
+                GITHUB_TOKEN = editToken.trim();
+                setShowTokenInput(false);
+                downloadFromCloud().then(function(ok) { if (ok) setCloudStatus(true); });
+            }
         }
 
         // ====== 首页 ======
@@ -1501,7 +1504,8 @@
                     cloudStatus ? h('div', { className: 'header-stat', title: '数据已同步到云端' },
                         h('div', { style: { fontSize: 14, color: 'var(--success)' } }, '☁️'),
                         h('div', { className: 'header-stat-label' }, '已同步')
-                    ) : null
+                    ) : null,
+                    !GITHUB_TOKEN ? h('button', { className: 'btn btn-small btn-primary', onClick: function() { setEditToken(''); setShowTokenInput(true); }, style: { fontSize: 12, height: 32, padding: '0 12px' } }, '🔑 设置同步') : null
                 )
             ),
             // Nav
@@ -1742,6 +1746,20 @@
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '选择下一次见面的日期'),
                     h('div', { className: 'input-wrapper input-wrapper-middle' },
                         h('input', { className: 'input-field', type: 'date', value: editNextMeetDate, onChange: function(e) { setEditNextMeetDate(e.target.value); } })
+                    )
+                )
+            ),
+            // 设置 GitHub Token Modal
+            h(Modal, { show: showTokenInput, title: '🔑 设置云端同步', onClose: function() { setShowTokenInput(false); }, onConfirm: saveToken, confirmText: '保存并同步 💾', confirmClass: 'btn-primary-teal' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, 'GitHub 个人访问令牌'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', value: editToken, onChange: function(e) { setEditToken(e.target.value); }, placeholder: 'ghp_xxxxxxxxxxxxxxxxxxxx' })
+                    ),
+                    h('div', { style: { fontSize: 12, color: 'var(--text-secondary)', marginTop: 8, lineHeight: 1.6 } },
+                        '令牌保存在你的浏览器中，不会上传到代码里。',
+                        h('br'),
+                        '两人使用同一个令牌即可同步数据。'
                     )
                 )
             )
