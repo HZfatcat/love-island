@@ -1037,6 +1037,21 @@
                 });
             }, 2000);
         }
+        function uploadToCloudManual() {
+            if (!GITHUB_TOKEN) return;
+            if (confirm('确定将本地数据上传到云端？\n云端数据将被覆盖，对方下次下载即可看到你的修改。')) {
+                setCloudStatus(true);
+                uploadToCloud();
+            }
+        }
+        function downloadFromCloudManual() {
+            if (!GITHUB_TOKEN) return;
+            if (confirm('确定从云端下载数据？\n本地数据将被覆盖，将获取对方的最新修改。')) {
+                downloadFromCloud().then(function(ok) {
+                    if (ok) setCloudStatus(true);
+                });
+            }
+        }
         function handlePhotoUpload(e) {
             var files = e.target.files;
             if (!files || files.length === 0) return;
@@ -1727,7 +1742,10 @@
                         h('div', { style: { fontSize: 14, color: 'var(--success)' } }, '☁️'),
                         h('div', { className: 'header-stat-label' }, '已同步')
                     ) : null,
-                    GITHUB_TOKEN ? h('button', { className: 'btn btn-small btn-primary', onClick: syncNow, style: { fontSize: 12, height: 32, padding: '0 12px' } }, '☁️ 同步') : null,
+                    GITHUB_TOKEN ? h('div', { style: { display: 'flex', gap: 4 } },
+                        h('button', { className: 'btn btn-small btn-primary', onClick: uploadToCloudManual, style: { fontSize: 11, height: 32, padding: '0 8px' }, title: '将本地数据上传到云端，覆盖云端数据' }, '☁️ 上传'),
+                        h('button', { className: 'btn btn-small btn-default', onClick: downloadFromCloudManual, style: { fontSize: 11, height: 32, padding: '0 8px' }, title: '从云端下载数据，覆盖本地数据' }, '☁️ 下载')
+                    ) : null,
                     !GITHUB_TOKEN ? h('button', { className: 'btn btn-small btn-primary', onClick: function() { setEditToken(''); setShowTokenInput(true); }, style: { fontSize: 12, height: 32, padding: '0 12px' } }, '🔑 设置同步') : null
                 )
             ),
