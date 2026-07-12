@@ -299,6 +299,32 @@
         .fight-entry:hover .fight-btn { opacity: 1; }
         .fight-btn { opacity: 0; }
 
+        /* Calendar */
+        .calendar-wrap { background: var(--bg-content); border-radius: 20px; padding: 20px; margin-bottom: 24px; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .calendar-month { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: 0.02em; }
+        .calendar-nav { display: flex; gap: 8px; }
+        .calendar-nav-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); background: var(--bg); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s var(--ease); color: var(--text-body); font-family: inherit; }
+        .calendar-nav-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .calendar-weekday { text-align: center; font-size: 12px; font-weight: 700; color: var(--text-secondary); padding: 6px 0; letter-spacing: 0.02em; }
+        .calendar-day { text-align: center; font-size: 13px; font-weight: 600; padding: 8px 4px; border-radius: 12px; color: var(--text-body); transition: all 0.2s var(--ease); cursor: default; position: relative; }
+        .calendar-day-other { color: var(--text-disabled); }
+        .calendar-day-today { font-weight: 900; color: var(--text); background: var(--primary-bg); }
+        .calendar-day-mark { font-weight: 700; }
+        .calendar-day-love { background: #fde4e8; color: var(--text); }
+        .calendar-day-separate { background: #fde4e8; color: var(--error); }
+        .calendar-day-meet { background: #e0f5ed; color: var(--success); box-shadow: 0 0 0 2px var(--success); }
+        .calendar-day-special { background: #e8edfe; color: #4a5a9e; }
+        .calendar-day:hover { transform: translateY(-1px); }
+        .calendar-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+        .calendar-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+        .calendar-legend-dot { width: 12px; height: 12px; border-radius: 4px; }
+        .calendar-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .calendar-stat { text-align: center; padding: 16px; border-radius: 16px; background: var(--bg); }
+        .calendar-stat-num { font-size: 28px; font-weight: 900; }
+        .calendar-stat-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-top: 2px; letter-spacing: 0.02em; }
+
         /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(40,30,20,0.45); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: var(--bg-content); border-radius: 24px; padding: 48px 48px 32px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(61,52,40,0.15); clip-path: url(#animal-modal-clip); }
@@ -614,6 +640,8 @@
         var _t3 = useState(firstDateStr.split('T')[0]), editFirstDate = _t3[0], setEditFirstDate = _t3[1];
         var _t4 = useState(separateDateStr.split('T')[0]), editSeparateDate = _t4[0], setEditSeparateDate = _t4[1];
         var _t5 = useState(nextMeetDateStr.split('T')[0]), editNextMeetDate = _t5[0], setEditNextMeetDate = _t5[1];
+        var _u = useState(new Date().getMonth()), calMonth = _u[0], setCalMonth = _u[1];
+        var _v = useState(new Date().getFullYear()), calYear = _v[0], setCalYear = _v[1];
         var _u = useState({ title: '', reason: '', nextStep: '' }), newFight = _u[0], setNewFight = _u[1];
         var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
@@ -934,7 +962,123 @@
             );
         }
 
-        // ====== 纪念日（含编辑/删除/新增） ======
+        // ====== 日历 ======
+        function renderCalendar() {
+            var now = new Date();
+            var today = { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
+            var firstDay = new Date(calYear, calMonth, 1).getDay();
+            var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+            var daysInPrev = new Date(calYear, calMonth, 0).getDate();
+            var weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            var monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+
+            // 收集需要标记的日期
+            function dateKey(y, m, d) { return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0'); }
+            var marks = {};
+            // 在一起的日子
+            var ls = loveStart;
+            marks[dateKey(ls.getFullYear(), ls.getMonth(), ls.getDate())] = 'love';
+            // 上次分开
+            var sd = separateDate;
+            marks[dateKey(sd.getFullYear(), sd.getMonth(), sd.getDate())] = 'separate';
+            // 下次见面
+            var nm = nextMeetDate;
+            marks[dateKey(nm.getFullYear(), nm.getMonth(), nm.getDate())] = 'meet';
+            // 特殊纪念日（取月日，映射到当前年）
+            specialDates.forEach(function(d) {
+                var k = dateKey(calYear, d.date.getMonth(), d.date.getDate());
+                if (!marks[k] || marks[k] === 'special') marks[k] = 'special';
+                else if (marks[k] !== 'meet' && marks[k] !== 'separate') marks[k] = 'special';
+                // 下一年也标记
+                var k2 = dateKey(calYear + 1, d.date.getMonth(), d.date.getDate());
+                if (!marks[k2]) marks[k2] = 'special';
+            });
+
+            // 计算统计
+            var togetherDays = Math.floor((separateDate - loveStart) / (1000*60*60*24));
+            if (togetherDays < 0) togetherDays = 0;
+            var apartDays = Math.floor((now - separateDate) / (1000*60*60*24));
+            if (apartDays < 0) apartDays = 0;
+            var meetCountdown = Math.ceil((nextMeetDate - now) / (1000*60*60*24));
+            if (meetCountdown < 0) meetCountdown = 0;
+
+            // 构建日历格子
+            var cells = [];
+            // 上月填充
+            for (var i = firstDay - 1; i >= 0; i--) {
+                var d = daysInPrev - i;
+                cells.push({ day: d, other: true });
+            }
+            // 本月
+            for (var i = 1; i <= daysInMonth; i++) {
+                cells.push({ day: i, other: false, today: calYear === today.y && calMonth === today.m && i === today.d });
+            }
+            // 下月填充
+            var remaining = 42 - cells.length;
+            for (var i = 1; i <= remaining; i++) {
+                cells.push({ day: i, other: true });
+            }
+
+            return h('div', { className: 'calendar-wrap' },
+                // 统计
+                h('div', { className: 'calendar-stats' },
+                    h('div', { className: 'calendar-stat', style: { background: '#fde4e8' } },
+                        h('div', { className: 'calendar-stat-num', style: { color: 'var(--pink)' } }, String(togetherDays)),
+                        h('div', { className: 'calendar-stat-label' }, '已在一起')
+                    ),
+                    h('div', { className: 'calendar-stat', style: { background: '#fde4e8' } },
+                        h('div', { className: 'calendar-stat-num', style: { color: 'var(--error)' } }, String(apartDays)),
+                        h('div', { className: 'calendar-stat-label' }, '已分开')
+                    ),
+                    h('div', { className: 'calendar-stat', style: { background: '#e0f5ed' } },
+                        h('div', { className: 'calendar-stat-num', style: { color: 'var(--success)' } }, String(meetCountdown)),
+                        h('div', { className: 'calendar-stat-label' }, '距下次见面')
+                    )
+                ),
+                // 日历头部
+                h('div', { className: 'calendar-header' },
+                    h('div', { className: 'calendar-month' }, calYear + '年 ' + monthNames[calMonth]),
+                    h('div', { className: 'calendar-nav' },
+                        h('button', { className: 'calendar-nav-btn', onClick: function() { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); } else { setCalMonth(calMonth - 1); } } }, '‹'),
+                        h('button', { className: 'calendar-nav-btn', onClick: function() { var d = new Date(); setCalMonth(d.getMonth()); setCalYear(d.getFullYear()); } }, '📅'),
+                        h('button', { className: 'calendar-nav-btn', onClick: function() { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); } else { setCalMonth(calMonth + 1); } } }, '›')
+                    )
+                ),
+                // 星期
+                h('div', { className: 'calendar-grid' },
+                    weekdays.map(function(w) { return h('div', { className: 'calendar-weekday', key: w }, w); }),
+                    cells.map(function(cell, idx) {
+                        var key = dateKey(calYear, calMonth, cell.day);
+                        var mk = marks[key];
+                        if (cell.other) {
+                            // 前后的日期也检查标记
+                            var otherKey = cell.day > 15
+                                ? dateKey(calMonth === 0 ? calYear - 1 : calYear, calMonth === 0 ? 11 : calMonth - 1, cell.day)
+                                : dateKey(calMonth === 11 ? calYear + 1 : calYear, calMonth === 11 ? 0 : calMonth + 1, cell.day);
+                            mk = marks[otherKey];
+                        }
+                        var cls = 'calendar-day';
+                        if (cell.other) cls += ' calendar-day-other';
+                        if (cell.today) cls += ' calendar-day-today';
+                        if (mk === 'love') cls += ' calendar-day-love';
+                        else if (mk === 'separate') cls += ' calendar-day-separate';
+                        else if (mk === 'meet') cls += ' calendar-day-meet';
+                        else if (mk === 'special') cls += ' calendar-day-special';
+                        return h('div', { className: cls, key: idx }, String(cell.day));
+                    })
+                ),
+                // 图例
+                h('div', { className: 'calendar-legend' },
+                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#fde4e8' } }), '💕 在一起'),
+                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#fde4e8', border: '1px solid var(--error)' } }), '🚉 分开'),
+                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#e0f5ed', border: '2px solid var(--success)' } }), '💞 下次见面'),
+                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#e8edfe' } }), '🎉 纪念日'),
+                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: 'var(--primary-bg)', border: '1px solid var(--primary)' } }), '📅 今天')
+                )
+            );
+        }
+
+        // ====== 纪念日（含日历/编辑/删除/新增） ======
         function renderDates() {
             function openNewDate() {
                 setEditingDate({ origName: '', name: '', icon: '💕', dateStr: new Date().toISOString().split('T')[0], color: 'pink', isNew: true });
@@ -942,6 +1086,7 @@
             }
             return h('div', null,
                 h('div', { className: 'section-title' }, h('span', null, '📅 我们的纪念日')),
+                renderCalendar(),
                 h('div', { style: { marginBottom: 20 } },
                     h('button', { className: 'btn btn-middle btn-primary-teal', onClick: openNewDate }, '✨ 新增纪念日')
                 ),
