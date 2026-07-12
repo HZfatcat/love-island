@@ -397,7 +397,8 @@
     const { createElement: h, useState, useEffect, useRef } = React;
 
     // ====== 云端同步（使用 jsonblob.com 免费 API，无需注册） ======
-    var CLOUD_BLOB_URL = localStorage.getItem('love_island_cloud_url') || '';
+    var CLOUD_BLOB_ID = localStorage.getItem('love_island_cloud_id') || '';
+    var CLOUD_BLOB_URL = CLOUD_BLOB_ID ? 'https://jsonblob.com/api/jsonBlob/' + CLOUD_BLOB_ID : '';
     var CLOUD_SYNCING = {};
 
     function loadData(key, fallback) {
@@ -432,28 +433,32 @@
 
     function uploadToCloud() {
         var data = getAllData();
-        var url = CLOUD_BLOB_URL || 'https://jsonblob.com/api/jsonBlob';
-        var method = CLOUD_BLOB_URL ? 'PUT' : 'POST';
-        fetch(url, {
-            method: method,
+        // 如果没有 blob ID，先创建一个
+        if (!CLOUD_BLOB_ID) {
+            CLOUD_BLOB_ID = 'love' + Date.now() + Math.random().toString(36).slice(2, 8);
+            CLOUD_BLOB_URL = 'https://jsonblob.com/api/jsonBlob/' + CLOUD_BLOB_ID;
+            localStorage.setItem('love_island_cloud_id', CLOUD_BLOB_ID);
+        }
+        fetch(CLOUD_BLOB_URL, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         }).then(function(r) {
-            if (!CLOUD_BLOB_URL) {
-                var blobUrl = r.headers.get('Location');
-                if (blobUrl) {
-                    CLOUD_BLOB_URL = blobUrl;
-                    localStorage.setItem('love_island_cloud_url', blobUrl);
-                }
-            }
             return r.json();
-        }).then(function() {}).catch(function() {});
+        }).then(function() {}).catch(function(err) {
+            console.log('云端上传失败:', err);
+        });
     }
 
     function downloadFromCloud() {
-        if (!CLOUD_BLOB_URL) return Promise.resolve(false);
+        if (!CLOUD_BLOB_ID) return Promise.resolve(false);
+        // 先尝试读取，如果 404 说明是首次，先上传
         return fetch(CLOUD_BLOB_URL + '?t=' + Date.now()).then(function(r) {
-            if (!r.ok) throw new Error('No data');
+            if (r.status === 404) {
+                uploadToCloud();
+                return Promise.reject('new');
+            }
+            if (!r.ok) throw new Error('Failed');
             return r.json();
         }).then(function(data) {
             var keys = Object.keys(data);
@@ -471,7 +476,10 @@
                 setTimeout(function() { delete CLOUD_SYNCING[key]; }, 500);
             });
             return true;
-        }).catch(function() { return false; });
+        }).catch(function(e) {
+            if (e !== 'new') console.log('云端下载失败:', e);
+            return false;
+        });
     }
 
     // ====== DATA ======
