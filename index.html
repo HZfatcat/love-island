@@ -622,12 +622,12 @@
         { id: 2, date: '2025-05-20', title: '约会迟到', reason: '约好6点看电影，迟到了20分钟，手机还没电了联系不上。', nextStep: '以后提前30分钟出门，随身带充电宝。', status: 'wip' },
     ];
     var SPECIAL_DATES = [
-        { icon: '💕', name: '在一起的日子', date: new Date('2024-02-14'), color: 'pink', isLunar: false, countdown: 'since' },
-        { icon: '🎂', name: '她的生日', date: new Date('2025-08-15'), color: 'teal', isLunar: true, countdown: 'until' },
-        { icon: '🎂', name: '他的生日', date: new Date('2025-11-20'), color: 'blue', isLunar: true, countdown: 'until' },
-        { icon: '💍', name: '求婚纪念日', date: new Date('2025-06-01'), color: 'purple', isLunar: false, countdown: 'since' },
-        { icon: '🎄', name: '圣诞节', date: new Date('2025-12-25'), color: 'yellow', isLunar: false, countdown: 'until' },
-        { icon: '🎆', name: '跨年夜', date: new Date('2026-01-01'), color: 'pink', isLunar: false, countdown: 'until' },
+        { icon: '💕', name: '在一起的日子', date: new Date('2024-02-14'), color: 'pink', isLunar: false, countdown: 'since', dateType: 'anniversary' },
+        { icon: '🎂', name: '她的生日', date: new Date('2025-08-15'), color: 'teal', isLunar: true, countdown: 'until', dateType: 'birthday' },
+        { icon: '🎂', name: '他的生日', date: new Date('2025-11-20'), color: 'blue', isLunar: true, countdown: 'until', dateType: 'birthday' },
+        { icon: '💍', name: '求婚纪念日', date: new Date('2025-06-01'), color: 'purple', isLunar: false, countdown: 'since', dateType: 'anniversary' },
+        { icon: '🎄', name: '圣诞节', date: new Date('2025-12-25'), color: 'yellow', isLunar: false, countdown: 'until', dateType: 'holiday' },
+        { icon: '🎆', name: '跨年夜', date: new Date('2026-01-01'), color: 'pink', isLunar: false, countdown: 'until', dateType: 'holiday' },
     ];
     var MOOD_LIST = [
         { emoji: '😊', label: '开心' },
@@ -979,7 +979,7 @@
             var newDate = new Date(editingDate.dateStr + 'T12:00:00');
             setSpecialDates(specialDates.map(function(d) {
                 return d.name === editingDate.origName
-                    ? { icon: editingDate.icon || '💕', name: editingDate.name, date: newDate, color: editingDate.color || 'pink', isLunar: editingDate.isLunar || false, countdown: editingDate.countdown || 'until' }
+                    ? { icon: editingDate.icon || '💕', name: editingDate.name, date: newDate, color: editingDate.color || 'pink', isLunar: editingDate.isLunar || false, countdown: editingDate.countdown || 'until', dateType: editingDate.dateType || 'custom' }
                     : d;
             }));
             setEditingDate(null);
@@ -993,7 +993,7 @@
         function addDate() {
             if (!editingDate || !editingDate.name) return;
             var newDate = new Date(editingDate.dateStr + 'T12:00:00');
-            setSpecialDates(specialDates.concat([{ icon: editingDate.icon || '💕', name: editingDate.name, date: newDate, color: editingDate.color || 'pink', isLunar: editingDate.isLunar || false, countdown: editingDate.countdown || 'until' }]));
+            setSpecialDates(specialDates.concat([{ icon: editingDate.icon || '💕', name: editingDate.name, date: newDate, color: editingDate.color || 'pink', isLunar: editingDate.isLunar || false, countdown: editingDate.countdown || 'until', dateType: editingDate.dateType || 'custom' }]));
             setEditingDate(null);
             setShowDateEdit(false);
         }
@@ -1572,7 +1572,7 @@
         // ====== 纪念日（含日历/编辑/删除/新增） ======
         function renderDates() {
             function openNewDate() {
-                setEditingDate({ origName: '', name: '', icon: '💕', dateStr: new Date().toISOString().split('T')[0], color: 'pink', isNew: true, isLunar: false, countdown: 'until' });
+                setEditingDate({ origName: '', name: '', icon: '💕', dateStr: new Date().toISOString().split('T')[0], color: 'pink', isNew: true, isLunar: false, countdown: 'until', dateType: 'custom' });
                 setShowDateEdit(true);
             }
             return h('div', null,
@@ -1614,7 +1614,7 @@
                                 countType === 'until' ? (daysUntil <= 0 ? '❤️ 已过' : '还有 ' + daysUntil + ' 天') : (daysSince + ' 天前')
                             ),
                             h('div', { className: 'journal-actions', style: { marginLeft: 8 } },
-                                h('button', { className: 'action-btn', onClick: function() { setEditingDate({ origName: d.name, name: d.name, icon: d.icon, dateStr: d.date.toISOString().split('T')[0], color: d.color, isNew: false, isLunar: d.isLunar || false, countdown: d.countdown || 'until' }); setShowDateEdit(true); }, title: '编辑' }, '✏️'),
+                                h('button', { className: 'action-btn', onClick: function() { setEditingDate({ origName: d.name, name: d.name, icon: d.icon, dateStr: d.date.toISOString().split('T')[0], color: d.color, isNew: false, isLunar: d.isLunar || false, countdown: d.countdown || 'until', dateType: d.dateType || 'custom' }); setShowDateEdit(true); }, title: '编辑' }, '✏️'),
                                 h('button', { className: 'action-btn action-btn-danger', onClick: function() { deleteDate(d.name); }, title: '删除' }, '🗑️')
                             )
                         );
@@ -1935,9 +1935,43 @@
                     )
                 ),
                 h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '类型'),
+                    h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+                        [
+                            { type: 'birthday', label: '🎂 生日', icon: '🎂', color: 'pink' },
+                            { type: 'anniversary', label: '💕 纪念日', icon: '💕', color: 'teal' },
+                            { type: 'holiday', label: '🎄 节日', icon: '🎄', color: 'yellow' },
+                            { type: 'travel', label: '✈️ 旅行', icon: '✈️', color: 'blue' },
+                            { type: 'custom', label: '✨ 自定义', icon: '✨', color: 'purple' },
+                        ].map(function(t) {
+                            return h('button', {
+                                key: t.type,
+                                className: 'btn btn-small ' + (editingDate && editingDate.dateType === t.type ? 'btn-primary-teal' : 'btn-default'),
+                                onClick: function() {
+                                    if (editingDate) {
+                                        var updates = { dateType: t.type, icon: t.icon, color: t.color };
+                                        if (t.type === 'birthday') updates.name = '生日';
+                                        else if (t.type === 'anniversary') updates.name = '纪念日';
+                                        else if (t.type === 'holiday') updates.name = '节日';
+                                        else if (t.type === 'travel') updates.name = '旅行';
+                                        setEditingDate(Object.assign({}, editingDate, updates));
+                                    }
+                                },
+                                style: { fontSize: 12 }
+                            }, t.label);
+                        })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '图标'),
-                    h('div', { className: 'input-wrapper input-wrapper-middle' },
-                        h('input', { className: 'input-field', value: editingDate ? editingDate.icon : '', onChange: function(e) { if (editingDate) setEditingDate(Object.assign({}, editingDate, { icon: e.target.value })); }, placeholder: '💕 🎂 💍 🎄 🎆' })
+                    h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+                        ['💕','🎂','💍','🎄','🎆','🎉','🌸','🌊','✈️','🏔️','🎈','🎁','🌹','💑','🏮','🎃','☀️','🌟','🎯','❤️'].map(function(ic) {
+                            return h('button', {
+                                key: ic,
+                                style: { fontSize: 20, width: 40, height: 40, borderRadius: 10, border: '2px solid ' + (editingDate && editingDate.icon === ic ? 'var(--primary)' : 'var(--border)'), background: editingDate && editingDate.icon === ic ? 'var(--primary-bg)' : 'var(--bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' },
+                                onClick: function() { if (editingDate) setEditingDate(Object.assign({}, editingDate, { icon: ic })); }
+                            }, ic);
+                        })
                     )
                 ),
                 h('div', { style: { marginBottom: 16 } },
