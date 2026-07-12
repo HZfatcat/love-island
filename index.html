@@ -171,7 +171,10 @@
         .section-title::after { content: ''; flex: 1; height: 2px; background: linear-gradient(90deg, var(--border), transparent); }
 
         /* Nav Bar */
-        .nav-bar { display: flex; gap: 8px; margin-bottom: 32px; padding: 6px; background: var(--bg-content); border-radius: 18px; border: 2px solid rgba(25,200,185,0.15); flex-wrap: wrap; }
+        .nav-bar { display: flex; gap: 8px; margin-bottom: 32px; padding: 6px; background: var(--bg-content); border-radius: 18px; border: 2px solid rgba(25,200,185,0.15); flex-wrap: wrap; overflow: visible; }
+        .nav-bar-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 32px; border-radius: 18px; }
+        .nav-bar-wrap::-webkit-scrollbar { display: none; }
+        .nav-btn { padding: 10px 20px; font-size: 14px; font-weight: 600; color: var(--text-secondary); border: none; border-radius: 14px; cursor: pointer; background: transparent; transition: all 0.25s var(--ease); font-family: inherit; letter-spacing: 0.02em; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
         .nav-btn { padding: 10px 20px; font-size: 14px; font-weight: 600; color: var(--text-secondary); border: none; border-radius: 14px; cursor: pointer; background: transparent; transition: all 0.25s var(--ease); font-family: inherit; letter-spacing: 0.02em; display: flex; align-items: center; gap: 6px; }
         .nav-btn:hover { background: rgba(25,200,185,0.08); color: var(--text-body); }
         .nav-btn-active { background: var(--primary); color: #fff; box-shadow: 0 3px 0 0 #0ea090; }
@@ -367,8 +370,9 @@
             .site-logo-text { font-size: 18px; }
             .site-logo-sub { font-size: 12px; }
             .header-stats { justify-content: center; }
-            .nav-bar { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding: 4px; gap: 4px; }
-            .nav-bar::-webkit-scrollbar { height: 0; }
+            .nav-bar { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding: 4px; gap: 4px; scrollbar-width: none; }
+            .nav-bar::-webkit-scrollbar { display: none; }
+            .nav-bar-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; }
             .nav-btn { padding: 8px 12px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
             .countdown-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
             .countdown-number { font-size: 28px; }
@@ -1708,10 +1712,12 @@
                 )
             ),
             // Nav
-            h('nav', { className: 'nav-bar' },
-                NAV_ITEMS.map(function(nav) {
-                    return h(NavItem, { key: nav.key, icon: nav.icon, label: nav.label, active: activeTab === nav.key, onClick: function() { setActiveTab(nav.key); } });
-                })
+            h('div', { className: 'nav-bar-wrap' },
+                h('nav', { className: 'nav-bar' },
+                    NAV_ITEMS.map(function(nav) {
+                        return h(NavItem, { key: nav.key, icon: nav.icon, label: nav.label, active: activeTab === nav.key, onClick: function() { setActiveTab(nav.key); } });
+                    })
+                )
             ),
             // Content
             tabContent,
