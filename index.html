@@ -776,6 +776,7 @@
         var _c = useState(function() { return loadData('wishes', INIT_WISHES); }), wishes = _c[0], setWishes = _c[1];
         var _d = useState(function() { return loadData('messages', INIT_MESSAGES); }), messages = _d[0], setMessages = _d[1];
         var _d2 = useState(function() { return loadData('fights', INIT_FIGHTS); }), fights = _d2[0], setFights = _d2[1];
+        var _d3 = useState(function() { return loadData('photos', []); }), photos = _d3[0], setPhotos = _d3[1];
         var _e = useState(function() { return loadData('coupleName', COUPLE_NAME); }), coupleName = _e[0], setCoupleName = _e[1];
         var _f = useState(function() { return loadData('loveStart', LOVE_START.toISOString()); }), loveStartStr = _f[0], setLoveStartStr = _f[1];
         var loveStart = new Date(loveStartStr);
@@ -800,6 +801,7 @@
         useEffect(function() { saveData('wishes', wishes); }, [wishes]);
         useEffect(function() { saveData('messages', messages); }, [messages]);
         useEffect(function() { saveData('fights', fights); }, [fights]);
+        useEffect(function() { saveData('photos', photos); }, [photos]);
         useEffect(function() { saveData('coupleName', coupleName); }, [coupleName]);
         useEffect(function() { saveData('loveStart', loveStartStr); }, [loveStartStr]);
         useEffect(function() { saveData('meetDate', meetDateStr); }, [meetDateStr]);
@@ -882,6 +884,7 @@
         var _z2 = useState('grid'), galleryView = _z2[0], setGalleryView = _z2[1];
         var _z3 = useState(new Date().getFullYear()), dpYear = _z3[0], setDpYear = _z3[1];
         var _z4 = useState(new Date().getMonth()), dpMonth = _z4[0], setDpMonth = _z4[1];
+        var photoInputRef = useRef(null);
         var _u = useState({ title: '', reason: '', nextStep: '' }), newFight = _u[0], setNewFight = _u[1];
         var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
@@ -1031,6 +1034,28 @@
         }
         function handleKeyDown(e) {
             if (e.key === 'Enter') sendMessage();
+        }
+        function handlePhotoUpload(e) {
+            var files = e.target.files;
+            if (!files || files.length === 0) return;
+            for (var i = 0; i < files.length; i++) {
+                (function(file) {
+                    var reader = new FileReader();
+                    reader.onload = function(ev) {
+                        var dataUrl = ev.target.result;
+                        // 限制图片大小，超过 200KB 则跳过
+                        if (dataUrl.length > 200 * 1024) return;
+                        setPhotos(function(prev) { return prev.concat([{ id: Date.now() + Math.random(), data: dataUrl, name: file.name, date: new Date().toISOString().split('T')[0] }]); });
+                    };
+                    reader.readAsDataURL(file);
+                })(files[i]);
+            }
+            e.target.value = '';
+        }
+        function deletePhoto(id) {
+            if (confirm('确定要删除这张照片吗？')) {
+                setPhotos(photos.filter(function(p) { return p.id !== id; }));
+            }
         }
         function saveToken() {
             if (editToken.trim()) {
@@ -1218,6 +1243,10 @@
                     d.setDate(d.getDate() + i * 15);
                     events.push({ date: d.toISOString().split('T')[0], type: 'photo', icon: item.emoji, title: item.label, desc: '📸 回忆照片' });
                 });
+                // 上传的照片
+                photos.forEach(function(p) {
+                    events.push({ date: p.date, type: 'photo', icon: '📸', title: p.name || '照片', desc: '📷 ' + p.date });
+                });
                 // 按日期排序（最新的在前）
                 events.sort(function(a, b) { return a.date < b.date ? 1 : -1; });
                 return h('div', { className: 'timeline' },
@@ -1235,15 +1264,40 @@
             }
 
             return h('div', null,
+                h('input', { type: 'file', accept: 'image/*', multiple: true, style: { display: 'none' }, onChange: function(e) {
+                    var files = e.target.files;
+                    if (!files || files.length === 0) return;
+                    for (var i = 0; i < files.length; i++) {
+                        (function(file) {
+                            var reader = new FileReader();
+                            reader.onload = function(ev) {
+                                if (ev.target.result.length > 200 * 1024) return;
+                                setPhotos(function(prev) { return prev.concat([{ id: Date.now() + Math.random(), data: ev.target.result, name: file.name, date: new Date().toISOString().split('T')[0] }]); });
+                            };
+                            reader.readAsDataURL(file);
+                        })(files[i]);
+                    }
+                    e.target.value = '';
+                }, id: 'photoInput' }),
                 h('div', { className: 'section-title' }, h('span', null, '📸 我们的回忆相册')),
-                h('div', { style: { marginBottom: 20, display: 'flex', gap: 8 } },
+                h('div', { style: { marginBottom: 20, display: 'flex', gap: 8, flexWrap: 'wrap' } },
                     h('button', { className: 'btn btn-small ' + (galleryView === 'grid' ? 'btn-primary-teal' : 'btn-default'), onClick: function() { setGalleryView('grid'); } }, '📷 照片墙'),
-                    h('button', { className: 'btn btn-small ' + (galleryView === 'timeline' ? 'btn-primary-teal' : 'btn-default'), onClick: function() { setGalleryView('timeline'); } }, '📅 时间轴')
+                    h('button', { className: 'btn btn-small ' + (galleryView === 'timeline' ? 'btn-primary-teal' : 'btn-default'), onClick: function() { setGalleryView('timeline'); } }, '📅 时间轴'),
+                    h('button', { className: 'btn btn-small btn-primary-pink', onClick: function() { document.getElementById('photoInput').click(); } }, '📤 上传照片')
                 ),
                 galleryView === 'grid'
                     ? h('div', { className: 'gallery-grid' },
+                        // 上传的照片
+                        photos.map(function(photo) {
+                            return h('div', { key: photo.id, className: 'gallery-item', style: { background: '#fff', overflow: 'hidden', position: 'relative' } },
+                                h('img', { src: photo.data, style: { width: '100%', height: '100%', objectFit: 'cover' }, alt: photo.name }),
+                                h('div', { className: 'gallery-item-label' }, photo.date),
+                                h('button', { style: { position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', fontSize: 12, lineHeight: '24px', textAlign: 'center' }, onClick: function() { deletePhoto(photo.id); }, title: '删除' }, '×')
+                            );
+                        }),
+                        // 预设的emoji模板
                         GALLERY_ITEMS.map(function(item, i) {
-                            return h('div', { key: i, className: 'gallery-item', style: { background: i % 2 === 0 ? 'var(--primary-bg)' : '#fde4e8' } },
+                            return h('div', { key: 'g' + i, className: 'gallery-item', style: { background: i % 2 === 0 ? 'var(--primary-bg)' : '#fde4e8' } },
                                 h('span', null, item.emoji),
                                 h('div', { className: 'gallery-item-label' }, item.label)
                             );
@@ -1633,6 +1687,7 @@
                     !GITHUB_TOKEN ? h('button', { className: 'btn btn-small btn-primary', onClick: function() { setEditToken(''); setShowTokenInput(true); }, style: { fontSize: 12, height: 32, padding: '0 12px' } }, '🔑 设置同步') : null
                 )
             ),
+            h('input', { type: 'file', accept: 'image/*', multiple: true, ref: photoInputRef, style: { display: 'none' }, onChange: handlePhotoUpload }),
             // Nav
             h('div', { className: 'nav-bar-wrap' },
                 h('nav', { className: 'nav-bar' },
