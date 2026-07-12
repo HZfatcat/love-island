@@ -1,7 +1,29 @@
 {
   "journal": [],
   "wishes": [],
-  "messages": [],
+  "messages": [
+    {
+      "id": 3,
+      "sender": "小可爱",
+      "text": "今晚我们一起去看星星吧？天气预报说天气很好呢",
+      "time": "14:12",
+      "isSelf": true
+    },
+    {
+      "id": 4,
+      "sender": "大笨蛋",
+      "text": "好呀好呀！我带上我新买的小毯子，给你披着~",
+      "time": "14:15",
+      "isSelf": false
+    },
+    {
+      "id": 5,
+      "sender": "小可爱",
+      "text": "你真好 ❤️ 那晚上见！",
+      "time": "14:16",
+      "isSelf": true
+    }
+  ],
   "fights": [
     {
       "id": 1,
