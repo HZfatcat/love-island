@@ -335,6 +335,7 @@
         .calendar-day-meet { background: #e0f5ed; color: var(--success); box-shadow: 0 0 0 2px var(--success); }
         .calendar-day-special { background: #e8edfe; color: #4a5a9e; }
         .calendar-day-diary { background: var(--primary-bg); color: var(--text); border: 1px solid var(--primary); }
+        .calendar-day-fight { background: #fde4e8; color: var(--error); border: 1px dashed var(--error); }
         .calendar-day:hover { transform: translateY(-1px); }
         .calendar-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
         .calendar-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
@@ -1362,6 +1363,14 @@
                 // 用心愿 id 的哈希作为"完成日"的近似，实际上我们不知道完成日期
                 // 简单起见，不特定标记日期，但会在点击日记时关联显示
             });
+            // 标记吵架记录
+            fights.forEach(function(f) {
+                var parts = f.date.split('-');
+                var k = dateKey(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                if (!marks[k]) marks[k] = 'fight';
+                if (!markInfo[k]) markInfo[k] = [];
+                markInfo[k].push({ type: 'fight', icon: '😤', title: f.title, desc: f.status === 'resolved' ? '已解决' : (f.status === 'wip' ? '改善中' : '未解决') });
+            });
 
             // 计算统计
             var togetherDays = Math.floor((separateDate - loveStart) / (1000*60*60*24));
@@ -1473,6 +1482,7 @@
                         else if (mk === 'meet') cls += ' calendar-day-meet';
                         else if (mk === 'special') cls += ' calendar-day-special';
                         else if (mk === 'diary') cls += ' calendar-day-diary';
+                        else if (mk === 'fight') cls += ' calendar-day-fight';
                         // 农历小字
                         var lunarTxt = getLunarText(calYear, calMonth, cell.day);
                         var markName = getMarkName(key);
@@ -1506,12 +1516,13 @@
                 ) : null,
                 // 图例
                 h('div', { className: 'calendar-legend' },
-                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#fde4e8' } }), '💕 在一起'),
-                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#fde4e8', border: '1px solid var(--error)' } }), '🚉 分开'),
+                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#fde4e8' } }), '💕 纪念日'),
+                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#fde4e8', border: '1px solid var(--error)' } }), '🚉 见面'),
                     h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#e0f5ed', border: '2px solid var(--success)' } }), '💞 下次见面'),
                     h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#e8edfe' } }), '🎉 纪念日'),
                     h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: 'var(--primary-bg)', border: '1px solid var(--primary)' } }), '📅 今天'),
-                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: 'var(--primary-bg)', border: '1px dashed var(--primary)' } }), '📖 日记')
+                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: 'var(--primary-bg)', border: '1px dashed var(--primary)' } }), '📖 日记'),
+                    h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#fde4e8', border: '1px dashed var(--error)' } }), '😤 吵架')
                 )
             );
         }
@@ -1816,6 +1827,14 @@
                         for (var i = 0; i < firstDay; i++) cells.push(0);
                         for (var i = 1; i <= daysInMonth; i++) cells.push(i);
                         return h('div', { style: { background: 'var(--bg)', borderRadius: 16, padding: 12, border: '2px solid var(--border)' } },
+                            // 年份/月份快速跳转
+                            h('div', { style: { display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center', justifyContent: 'center' } },
+                                h('input', { type: 'number', value: dpYear, onChange: function(e) { var v = parseInt(e.target.value); if (v >= 1900 && v <= 2100) setDpYear(v); }, style: { width: 60, border: 'none', borderBottom: '2px dashed var(--border)', background: 'transparent', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, color: 'var(--text)', textAlign: 'center', outline: 'none' } }),
+                                h('span', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)' } }, '年'),
+                                h('select', { value: dpMonth, onChange: function(e) { setDpMonth(parseInt(e.target.value)); }, style: { border: '2px solid var(--border)', borderRadius: 8, padding: '4px 8px', background: 'var(--bg)', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, color: 'var(--text)', outline: 'none' } },
+                                    monthNames.map(function(m, i) { return h('option', { value: i, key: i }, m); })
+                                )
+                            ),
                             h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 } },
                                 h('button', { style: { border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-body)', fontFamily: 'inherit' }, onClick: function() { if (dpMonth === 0) { setDpMonth(11); setDpYear(dpYear - 1); } else { setDpMonth(dpMonth - 1); } } }, '‹'),
                                 h('span', { style: { fontSize: 15, fontWeight: 700, color: 'var(--text)' } }, dpYear + '年 ' + monthNames[dpMonth]),
