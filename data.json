@@ -2,16 +2,7 @@
   "journal": [],
   "wishes": [],
   "messages": [],
-  "fights": [
-    {
-      "id": 2,
-      "date": "2025-05-20",
-      "title": "约会迟到",
-      "reason": "约好6点看电影，迟到了20分钟，手机还没电了联系不上。",
-      "nextStep": "以后提前30分钟出门，随身带充电宝。",
-      "status": "wip"
-    }
-  ],
+  "fights": [],
   "coupleName": "乾乾 & 雯雯",
   "loveStart": "2026-06-23T00:00:00.000Z",
   "meetDate": "2026-01-01T00:00:00.000Z",
@@ -19,6 +10,12 @@
   "separateDate": "2026-07-09T00:00:00.000Z",
   "nextMeetDate": "2026-07-21T00:00:00.000Z",
   "specialDates": [
+    {
+      "icon": "💕",
+      "name": "在一起的日子",
+      "date": "2024-02-14T00:00:00.000Z",
+      "color": "pink"
+    },
     {
       "icon": "🎂",
       "name": "她的生日",
