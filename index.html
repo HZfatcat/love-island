@@ -450,12 +450,12 @@
         { id: 2, date: '2025-05-20', title: '约会迟到', reason: '约好6点看电影，迟到了20分钟，手机还没电了联系不上。', nextStep: '以后提前30分钟出门，随身带充电宝。', status: 'wip' },
     ];
     var SPECIAL_DATES = [
-        { icon: '💕', name: '在一起的日子', date: new Date('2024-02-14'), color: 'pink' },
-        { icon: '🎂', name: '她的生日', date: new Date('2025-08-15'), color: 'teal' },
-        { icon: '🎂', name: '他的生日', date: new Date('2025-11-20'), color: 'blue' },
-        { icon: '💍', name: '求婚纪念日', date: new Date('2025-06-01'), color: 'purple' },
-        { icon: '🎄', name: '圣诞节', date: new Date('2025-12-25'), color: 'yellow' },
-        { icon: '🎆', name: '跨年夜', date: new Date('2026-01-01'), color: 'pink' },
+        { icon: '💕', name: '在一起的日子', date: new Date('2024-02-14'), color: 'pink', isLunar: false },
+        { icon: '🎂', name: '她的生日', date: new Date('2025-08-15'), color: 'teal', isLunar: true },
+        { icon: '🎂', name: '他的生日', date: new Date('2025-11-20'), color: 'blue', isLunar: true },
+        { icon: '💍', name: '求婚纪念日', date: new Date('2025-06-01'), color: 'purple', isLunar: false },
+        { icon: '🎄', name: '圣诞节', date: new Date('2025-12-25'), color: 'yellow', isLunar: false },
+        { icon: '🎆', name: '跨年夜', date: new Date('2026-01-01'), color: 'pink', isLunar: false },
     ];
     var MOOD_LIST = [
         { emoji: '😊', label: '开心' },
@@ -495,6 +495,119 @@
         var h = String(d.getHours()).padStart(2, '0');
         var m = String(d.getMinutes()).padStart(2, '0');
         return h + ':' + m;
+    }
+
+    // ====== 农历转换（1900-2100 年） ======
+    var LUNAR_INFO = [
+        0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
+        0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
+        0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
+        0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
+        0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
+        0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
+        0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
+        0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
+        0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
+        0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,
+        0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
+        0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+        0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
+        0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+        0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,
+        0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06aa0,0x1a6c4,0x0aae0,
+        0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,
+        0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
+        0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,
+        0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a4d0,0x0d150,0x0f252,
+        0x0d520
+    ];
+    var LUNAR_MONTH_DAYS = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    var GAN_ZHI = [['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'],['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']];
+    var SHENG_XIAO = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
+
+    function lunarToSolar(lunarYear, lunarMonth, lunarDay, isLeap) {
+        // 返回 Gregorian date 对象，失败返回 null
+        if (lunarYear < 1900 || lunarYear > 2100) return null;
+        var idx = lunarYear - 1900;
+        var info = LUNAR_INFO[idx];
+        var leapMonth = info >> 16 & 0xf;
+        if (isLeap && leapMonth !== lunarMonth) return null;
+        var baseDate = new Date(1900, 0, 31); // 1900-01-31 = 农历1900-01-01
+        var offset = 0;
+        for (var y = 1900; y < lunarYear; y++) {
+            var yInfo = LUNAR_INFO[y - 1900];
+            var yLeap = yInfo >> 16 & 0xf;
+            var totalDays = 0;
+            for (var m = 1; m <= 12; m++) {
+                totalDays += (yInfo >> (16 - m) & 1) ? 30 : 29;
+            }
+            if (yLeap > 0) totalDays += (yInfo >> (16 - yLeap) & 1) ? 30 : 29;
+            offset += totalDays;
+        }
+        // 本年的每月天数
+        var monthDays = [];
+        for (var m = 1; m <= 12; m++) {
+            monthDays[m] = (info >> (16 - m) & 1) ? 30 : 29;
+        }
+        if (leapMonth > 0) monthDays[leapMonth + 0.5] = (info >> (16 - leapMonth) & 1) ? 30 : 29;
+        // 计算到目标月日的偏移
+        for (var m = 1; m < lunarMonth; m++) offset += monthDays[m];
+        if (isLeap && leapMonth === lunarMonth) offset += monthDays[lunarMonth];
+        offset += lunarDay - 1;
+        // 加上偏移
+        var result = new Date(baseDate);
+        result.setDate(result.getDate() + offset);
+        return result;
+    }
+
+    function solarToLunar(date) {
+        // 返回 { year, month, day, isLeap, shengXiao, ganZhi }
+        var baseDate = new Date(1900, 0, 31);
+        var offset = Math.floor((date - baseDate) / (1000 * 60 * 60 * 24));
+        var lunarYear, lunarMonth, lunarDay, isLeap = false;
+        for (lunarYear = 1900; lunarYear < 2101; lunarYear++) {
+            var idx = lunarYear - 1900;
+            var info = LUNAR_INFO[idx];
+            var leapMonth = info >> 16 & 0xf;
+            var totalDays = 0;
+            for (var m = 1; m <= 12; m++) totalDays += (info >> (16 - m) & 1) ? 30 : 29;
+            if (leapMonth > 0) totalDays += (info >> (16 - leapMonth) & 1) ? 30 : 29;
+            if (offset < totalDays) break;
+            offset -= totalDays;
+        }
+        if (lunarYear > 2100) return null;
+        var info = LUNAR_INFO[lunarYear - 1900];
+        var leapMonth = info >> 16 & 0xf;
+        var monthDays = [];
+        for (var m = 1; m <= 12; m++) monthDays[m] = (info >> (16 - m) & 1) ? 30 : 29;
+        if (leapMonth > 0) monthDays[leapMonth + 0.5] = (info >> (16 - leapMonth) & 1) ? 30 : 29;
+        var months = Object.keys(monthDays).map(Number).sort(function(a,b){return a-b;});
+        for (var i = 0; i < months.length; i++) {
+            var m = months[i];
+            var days = monthDays[m];
+            if (offset < days) {
+                lunarMonth = Math.floor(m);
+                isLeap = m % 1 !== 0;
+                lunarDay = offset + 1;
+                break;
+            }
+            offset -= days;
+        }
+        var sxIdx = (lunarYear - 4) % 12;
+        if (sxIdx < 0) sxIdx += 12;
+        return { year: lunarYear, month: lunarMonth, day: lunarDay, isLeap: isLeap, shengXiao: SHENG_XIAO[sxIdx] };
+    }
+
+    function getLunarDateStr(date) {
+        var lunar = solarToLunar(date);
+        if (!lunar) return '';
+        var cnNums = ['', '一','二','三','四','五','六','七','八','九','十','十一','十二'];
+        var cnDays = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
+            '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
+            '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+        var monthStr = (lunar.isLeap ? '闰' : '') + cnNums[lunar.month] + '月';
+        var dayStr = cnDays[lunar.day - 1] || lunar.day + '日';
+        return lunar.shengXiao + '年 · ' + monthStr + dayStr;
     }
 
     // ====== 自定义 Hook ======
@@ -640,8 +753,9 @@
         var _t3 = useState(firstDateStr.split('T')[0]), editFirstDate = _t3[0], setEditFirstDate = _t3[1];
         var _t4 = useState(separateDateStr.split('T')[0]), editSeparateDate = _t4[0], setEditSeparateDate = _t4[1];
         var _t5 = useState(nextMeetDateStr.split('T')[0]), editNextMeetDate = _t5[0], setEditNextMeetDate = _t5[1];
-        var _u = useState(new Date().getMonth()), calMonth = _u[0], setCalMonth = _u[1];
-        var _v = useState(new Date().getFullYear()), calYear = _v[0], setCalYear = _v[1];
+        var _u = useState(0), calMonth = _u[0], setCalMonth = _u[1];
+        var _v = useState(2026), calYear = _v[0], setCalYear = _v[1];
+        var _w = useState(null), calPopup = _w[0], setCalPopup = _w[1];
         var _u = useState({ title: '', reason: '', nextStep: '' }), newFight = _u[0], setNewFight = _u[1];
         var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
@@ -735,7 +849,7 @@
         }
         function addDate() {
             if (!editingDate || !editingDate.name) return;
-            setSpecialDates(specialDates.concat([{ icon: editingDate.icon || '💕', name: editingDate.name, date: new Date(editingDate.dateStr), color: editingDate.color || 'pink' }]));
+            setSpecialDates(specialDates.concat([{ icon: editingDate.icon || '💕', name: editingDate.name, date: new Date(editingDate.dateStr), color: editingDate.color || 'pink', isLunar: editingDate.isLunar || false }]));
             setEditingDate(null);
             setShowDateEdit(false);
         }
@@ -1004,19 +1118,51 @@
 
             // 构建日历格子
             var cells = [];
-            // 上月填充
             for (var i = firstDay - 1; i >= 0; i--) {
                 var d = daysInPrev - i;
                 cells.push({ day: d, other: true });
             }
-            // 本月
             for (var i = 1; i <= daysInMonth; i++) {
                 cells.push({ day: i, other: false, today: calYear === today.y && calMonth === today.m && i === today.d });
             }
-            // 下月填充
             var remaining = 42 - cells.length;
             for (var i = 1; i <= remaining; i++) {
                 cells.push({ day: i, other: true });
+            }
+
+            // 预计算农历文本
+            function getLunarText(y, m, d) {
+                var dt = new Date(y, m, d);
+                var lunar = solarToLunar(dt);
+                if (!lunar) return '';
+                var cnDays = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
+                    '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
+                    '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+                return cnDays[lunar.day - 1] || '';
+            }
+
+            // 获取指定日期的标记名称
+            function getMarkName(k) {
+                if (marks[k] === 'love') return '💕 在一起的日子';
+                if (marks[k] === 'separate') return '🚉 上次分开';
+                if (marks[k] === 'meet') return '💞 下次见面 🎉';
+                if (marks[k] === 'special') {
+                    for (var si = 0; si < specialDates.length; si++) {
+                        var sd = specialDates[si];
+                        var dk = dateKey(calYear, sd.date.getMonth(), sd.date.getDate());
+                        if (dk === k) return sd.icon + ' ' + sd.name;
+                    }
+                }
+                return '';
+            }
+
+            // 查找当天的日记
+            function getDiaryForDate(y, m, d) {
+                var ds = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                for (var di = 0; di < journalEntries.length; di++) {
+                    if (journalEntries[di].date === ds) return journalEntries[di];
+                }
+                return null;
             }
 
             return h('div', { className: 'calendar-wrap' },
@@ -1035,11 +1181,13 @@
                         h('div', { className: 'calendar-stat-label' }, '距下次见面')
                     )
                 ),
-                // 日历头部
+                // 日历头部（含年份快速跳转）
                 h('div', { className: 'calendar-header' },
                     h('div', { className: 'calendar-month' }, calYear + '年 ' + monthNames[calMonth]),
                     h('div', { className: 'calendar-nav' },
                         h('button', { className: 'calendar-nav-btn', onClick: function() { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); } else { setCalMonth(calMonth - 1); } } }, '‹'),
+                        h('button', { className: 'calendar-nav-btn', onClick: function() { setCalMonth(0); setCalYear(2026); } }, '2026'),
+                        h('button', { className: 'calendar-nav-btn', onClick: function() { setCalMonth(0); setCalYear(2027); } }, '2027'),
                         h('button', { className: 'calendar-nav-btn', onClick: function() { var d = new Date(); setCalMonth(d.getMonth()); setCalYear(d.getFullYear()); } }, '📅'),
                         h('button', { className: 'calendar-nav-btn', onClick: function() { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); } else { setCalMonth(calMonth + 1); } } }, '›')
                     )
@@ -1051,7 +1199,6 @@
                         var key = dateKey(calYear, calMonth, cell.day);
                         var mk = marks[key];
                         if (cell.other) {
-                            // 前后的日期也检查标记
                             var otherKey = cell.day > 15
                                 ? dateKey(calMonth === 0 ? calYear - 1 : calYear, calMonth === 0 ? 11 : calMonth - 1, cell.day)
                                 : dateKey(calMonth === 11 ? calYear + 1 : calYear, calMonth === 11 ? 0 : calMonth + 1, cell.day);
@@ -1064,9 +1211,30 @@
                         else if (mk === 'separate') cls += ' calendar-day-separate';
                         else if (mk === 'meet') cls += ' calendar-day-meet';
                         else if (mk === 'special') cls += ' calendar-day-special';
-                        return h('div', { className: cls, key: idx }, String(cell.day));
+                        // 农历小字
+                        var lunarTxt = getLunarText(calYear, calMonth, cell.day);
+                        var markName = getMarkName(key);
+                        var diaryEntry = getDiaryForDate(calYear, calMonth, cell.day);
+                        return h('div', {
+                            className: cls + (markName || diaryEntry ? ' calendar-day-mark' : ''),
+                            key: idx,
+                            onClick: function(k, mn, de) { return function() { setCalPopup(k ? { key: k, name: mn, diary: de } : null); }; }(markName || (diaryEntry ? key : null), markName, diaryEntry),
+                            style: markName ? { cursor: 'pointer' } : {},
+                            title: (markName || '') + (diaryEntry ? ' 📖 ' + diaryEntry.title : '')
+                        },
+                            h('div', { style: { fontSize: 14, fontWeight: cell.today ? 900 : 600 } }, String(cell.day)),
+                            lunarTxt ? h('div', { style: { fontSize: 9, opacity: 0.55, lineHeight: 1.1 } }, lunarTxt) : null
+                        );
                     })
                 ),
+                // 点击日期弹出详情
+                calPopup ? h('div', { style: { marginTop: 12, padding: '12px 16px', borderRadius: 14, background: 'var(--bg)', border: '1.5px solid var(--border)' } },
+                    calPopup.name ? h('div', { style: { fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 } }, calPopup.name) : null,
+                    calPopup.diary ? h('div', { style: { fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 } },
+                        '📖 ' + calPopup.diary.title + ' · ' + calPopup.diary.date
+                    ) : null,
+                    h('button', { className: 'btn btn-small btn-default', onClick: function() { setCalPopup(null); }, style: { marginTop: 4 } }, '关闭')
+                ) : null,
                 // 图例
                 h('div', { className: 'calendar-legend' },
                     h('div', { className: 'calendar-legend-item' }, h('div', { className: 'calendar-legend-dot', style: { background: '#fde4e8' } }), '💕 在一起'),
@@ -1081,7 +1249,7 @@
         // ====== 纪念日（含日历/编辑/删除/新增） ======
         function renderDates() {
             function openNewDate() {
-                setEditingDate({ origName: '', name: '', icon: '💕', dateStr: new Date().toISOString().split('T')[0], color: 'pink', isNew: true });
+                setEditingDate({ origName: '', name: '', icon: '💕', dateStr: new Date().toISOString().split('T')[0], color: 'pink', isNew: true, isLunar: false });
                 setShowDateEdit(true);
             }
             return h('div', null,
@@ -1097,11 +1265,14 @@
                             h('div', { className: 'date-icon date-icon-' + d.color }, d.icon),
                             h('div', { className: 'date-info' },
                                 h('div', { className: 'date-name' }, d.name),
-                                h('div', { className: 'date-value' }, d.date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' }))
+                                h('div', { className: 'date-value' },
+                                    d.date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' }),
+                                    d.isLunar ? h('span', { style: { fontSize: 11, color: 'var(--text-muted)', marginLeft: 6 } }, '🌙 ' + getLunarDateStr(d.date)) : null
+                                )
                             ),
                             h('div', { className: 'date-days', style: { color: 'var(--primary)' } }, daysUntil <= 0 ? '❤️ 已过' : '还有 ' + daysUntil + ' 天'),
                             h('div', { className: 'journal-actions', style: { marginLeft: 8 } },
-                                h('button', { className: 'action-btn', onClick: function() { setEditingDate({ origName: d.name, name: d.name, icon: d.icon, dateStr: d.date.toISOString().split('T')[0], color: d.color, isNew: false }); setShowDateEdit(true); }, title: '编辑' }, '✏️'),
+                                h('button', { className: 'action-btn', onClick: function() { setEditingDate({ origName: d.name, name: d.name, icon: d.icon, dateStr: d.date.toISOString().split('T')[0], color: d.color, isNew: false, isLunar: d.isLunar || false }); setShowDateEdit(true); }, title: '编辑' }, '✏️'),
                                 h('button', { className: 'action-btn action-btn-danger', onClick: function() { deleteDate(d.name); }, title: '删除' }, '🗑️')
                             )
                         );
@@ -1349,6 +1520,16 @@
                     h('div', { className: 'input-wrapper input-wrapper-middle' },
                         h('input', { className: 'input-field', type: 'date', value: editingDate ? editingDate.dateStr : '', onChange: function(e) { if (editingDate) setEditingDate(Object.assign({}, editingDate, { dateStr: e.target.value })); } })
                     )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '按农历算？'),
+                    h('div', { style: { display: 'flex', gap: 8 } },
+                        h('button', { className: 'btn btn-small ' + (editingDate && editingDate.isLunar ? 'btn-primary-teal' : 'btn-default'), onClick: function() { if (editingDate) setEditingDate(Object.assign({}, editingDate, { isLunar: true })); } }, '🌙 农历'),
+                        h('button', { className: 'btn btn-small ' + (editingDate && !editingDate.isLunar ? 'btn-primary-teal' : 'btn-default'), onClick: function() { if (editingDate) setEditingDate(Object.assign({}, editingDate, { isLunar: false })); } }, '☀️ 公历')
+                    ),
+                    editingDate && editingDate.isLunar && editingDate.dateStr ? h('div', { style: { fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 } },
+                        '🌙 农历 ' + getLunarDateStr(new Date(editingDate.dateStr))
+                    ) : null
                 ),
                 h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '图标'),
