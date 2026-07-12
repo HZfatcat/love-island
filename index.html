@@ -361,25 +361,107 @@
         .footer { text-align: center; margin-top: 48px; padding: 24px 0; color: var(--text-disabled); font-size: 13px; border-top: 1px solid var(--border); }
 
         @media (max-width: 768px) {
-            .app-container { padding: 12px; }
-            .site-header { flex-direction: column; }
-            .nav-bar { justify-content: center; }
-            .nav-btn { padding: 8px 14px; font-size: 13px; }
-            .countdown-grid { grid-template-columns: repeat(2, 1fr); }
-            .anniversary-hero { padding: 24px 16px; }
-            .anniversary-days { font-size: 42px; }
-            .gallery-grid { grid-template-columns: repeat(2, 1fr); }
-            .modal-content { padding: 32px 24px 24px; }
-            .message-bubble { max-width: 90%; }
-            .section-title { font-size: 20px; }
-            .mood-emoji { font-size: 22px; }
-            .mood-label { font-size: 10px; }
-        }
-        @media (max-width: 480px) {
+            .app-container { padding: 10px; }
+            .site-header { flex-direction: column; align-items: stretch; gap: 8px; }
+            .site-logo-icon { font-size: 24px; }
+            .site-logo-text { font-size: 18px; }
+            .site-logo-sub { font-size: 12px; }
+            .header-stats { justify-content: center; }
+            .nav-bar { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding: 4px; gap: 4px; }
+            .nav-bar::-webkit-scrollbar { height: 0; }
+            .nav-btn { padding: 8px 12px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
             .countdown-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
             .countdown-number { font-size: 28px; }
-            .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .countdown-item { padding: 12px 4px; }
+            .anniversary-hero { padding: 20px 12px; }
+            .anniversary-hearts { font-size: 32px; }
+            .anniversary-title { font-size: 20px; }
+            .anniversary-sub { font-size: 14px; }
             .anniversary-days { font-size: 36px; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .modal-content { padding: 28px 20px 20px; margin: 10px; max-width: 100%; }
+            .modal-title { font-size: 18px; }
+            .message-bubble { max-width: 95%; }
+            .section-title { font-size: 18px; }
+            .mood-emoji { font-size: 20px; }
+            .mood-label { font-size: 9px; }
+            .mood-grid { grid-template-columns: repeat(5, 1fr); gap: 4px; }
+            .mood-btn { padding: 8px 4px; }
+            .calendar-stats { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+            .calendar-stat { padding: 10px; }
+            .calendar-stat-num { font-size: 20px; }
+            .calendar-grid { gap: 2px; }
+            .calendar-day { font-size: 11px; padding: 4px 2px; border-radius: 8px; }
+            .calendar-weekday { font-size: 10px; padding: 4px 0; }
+            .calendar-legend { gap: 8px; }
+            .calendar-legend-item { font-size: 10px; }
+            .date-list { gap: 8px; }
+            .date-item { padding: 10px 14px; gap: 10px; }
+            .wish-item { padding: 10px 14px; }
+            .journal-entry { padding: 14px 16px; }
+            .fight-entry { padding: 14px 16px; }
+            .timeline { padding-left: 24px; }
+            .timeline-item { padding: 12px 14px; margin-bottom: 12px; }
+            .card { padding: 14px 16px; }
+            .btn-middle { height: 38px; padding: 0 16px; font-size: 13px; }
+            .btn-small { height: 28px; padding: 0 12px; font-size: 11px; }
+            .site-header .btn-small { font-size: 11px; height: 28px; padding: 0 8px; }
+            .calendar-month input { font-size: 15px !important; width: 45px !important; }
+            .calendar-nav-btn { width: 30px; height: 30px; font-size: 13px; }
+            .calendar-wrap { padding: 12px; }
+            .message-board { gap: 10px; }
+            .message-bubble { padding: 12px 14px; }
+            .message-text { font-size: 13px; }
+            .wish-checkbox { width: 20px; height: 20px; }
+            .fight-next { padding: 8px 12px; }
+            .fight-next-text { font-size: 12px; }
+            .journal-text { font-size: 13px; }
+            .gallery-item { font-size: 36px; }
+            .gallery-item-label { font-size: 11px; padding: 6px 8px; }
+            .card-solid-teal, .card-solid-pink, .card-solid-blue { padding: 12px 16px; }
+            .card-solid-teal > div:first-child, .card-solid-pink > div:first-child, .card-solid-blue > div:first-child { font-size: 28px !important; }
+            .card-solid-teal > div:nth-child(2), .card-solid-pink > div:nth-child(2), .card-solid-blue > div:nth-child(2) { font-size: 22px !important; }
+        }
+        @media (max-width: 480px) {
+            .app-container { padding: 6px; }
+            .countdown-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+            .countdown-number { font-size: 24px; }
+            .anniversary-days { font-size: 28px; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .calendar-stats { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+            .calendar-stat-num { font-size: 16px; }
+            .calendar-stat { padding: 8px; }
+            .calendar-day { font-size: 10px; padding: 3px 1px; }
+            .nav-btn { padding: 6px 10px; font-size: 11px; }
+            .section-title { font-size: 16px; }
+            .anniversary-title { font-size: 17px; }
+            .anniversary-sub { font-size: 12px; }
+            .mood-emoji { font-size: 18px; }
+            .mood-btn { padding: 6px 2px; }
+            .modal-content { padding: 20px 16px 16px; }
+            .site-header .btn-small { font-size: 10px; height: 24px; padding: 0 6px; }
+            .header-stat-num { font-size: 16px; }
+            .header-stat-label { font-size: 10px; }
+            .site-logo-text { font-size: 16px; }
+            .site-logo-icon { font-size: 20px; }
+            .date-item { padding: 8px 10px; }
+            .date-icon { width: 36px; height: 36px; font-size: 18px; }
+            .date-name { font-size: 13px; }
+            .card { padding: 10px 12px; }
+            .btn-middle { height: 34px; padding: 0 12px; font-size: 12px; }
+            .btn-small { height: 26px; padding: 0 8px; font-size: 10px; }
+            .calendar-month input { font-size: 13px !important; width: 38px !important; }
+            .calendar-nav-btn { width: 28px; height: 28px; font-size: 12px; }
+            .calendar-wrap { padding: 8px; }
+            .fight-entry { padding: 10px 12px; }
+            .journal-entry { padding: 10px 12px; }
+            .wish-item { padding: 8px 10px; }
+            .wish-title { font-size: 13px; }
+            .timeline { padding-left: 20px; }
+            .timeline-item { padding: 10px 12px; }
+            .timeline-title { font-size: 12px; }
+            .timeline-desc { font-size: 11px; }
+            .gallery-item { font-size: 28px; }
         }
     </style>
 </head>
@@ -1380,14 +1462,19 @@
                         h('div', { className: 'calendar-stat-label' }, '距下次见面')
                     )
                 ),
-                // 日历头部（含年份快速跳转）
+                // 日历头部（含年份输入）
                 h('div', { className: 'calendar-header' },
-                    h('div', { className: 'calendar-month' }, calYear + '年 ' + monthNames[calMonth]),
+                    h('div', { className: 'calendar-month' },
+                        h('input', {
+                            type: 'number',
+                            value: calYear,
+                            onChange: function(e) { var v = parseInt(e.target.value); if (v >= 2026) { setCalYear(v); } },
+                            style: { width: 60, border: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 18, fontWeight: 700, color: 'var(--text)', outline: 'none', borderBottom: '2px dashed var(--border)' }
+                        }),
+                        '年 ' + monthNames[calMonth]
+                    ),
                     h('div', { className: 'calendar-nav' },
-                        h('button', { className: 'calendar-nav-btn', onClick: function() { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); } else { setCalMonth(calMonth - 1); } } }, '‹'),
-                        h('button', { className: 'calendar-nav-btn', onClick: function() { setCalMonth(0); setCalYear(calYear - 1); } }, String(calYear - 1)),
-                        h('button', { className: 'calendar-nav-btn', onClick: function() { setCalMonth(0); setCalYear(calYear); }, style: { fontWeight: 800, color: 'var(--primary)' } }, String(calYear)),
-                        h('button', { className: 'calendar-nav-btn', onClick: function() { setCalMonth(0); setCalYear(calYear + 1); } }, String(calYear + 1)),
+                        h('button', { className: 'calendar-nav-btn', onClick: function() { if (calMonth === 0) { if (calYear > 2026) { setCalMonth(11); setCalYear(calYear - 1); } } else { setCalMonth(calMonth - 1); } } }, '‹'),
                         h('button', { className: 'calendar-nav-btn', onClick: function() { var d = new Date(); setCalMonth(d.getMonth()); setCalYear(d.getFullYear()); } }, '📅'),
                         h('button', { className: 'calendar-nav-btn', onClick: function() { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); } else { setCalMonth(calMonth + 1); } } }, '›')
                     )
