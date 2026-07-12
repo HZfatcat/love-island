@@ -399,14 +399,15 @@
 
     // ====== Firebase 配置（修改这里） ======
     // 去 https://firebase.google.com 用 Google 账号登录 → 创建项目 → 添加 Web 应用 → 复制配置
+    // 注意：左侧菜单 → Realtime Database → 创建数据库（选测试模式）后才能获取 databaseURL
     var FIREBASE_CONFIG = {
-        apiKey: "",
-        authDomain: "",
-        databaseURL: "",
-        projectId: "",
-        storageBucket: "",
-        messagingSenderId: "",
-        appId: ""
+        apiKey: "AIzaSyBBhcBxPSzbiRlm7CbDOQGci9vmw5O17aI",
+        authDomain: "love-island-yw.firebaseapp.com",
+        databaseURL: "https://love-island-yw-default-rtdb.firebaseio.com",
+        projectId: "love-island-yw",
+        storageBucket: "love-island-yw.firebasestorage.app",
+        messagingSenderId: "566196952217",
+        appId: "1:566196952217:web:8630a5985d3e013f2b6c08"
     };
     var FB_READY = false;
     if (typeof firebase !== 'undefined' && FIREBASE_CONFIG.databaseURL) {
