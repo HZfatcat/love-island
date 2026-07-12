@@ -871,7 +871,7 @@
         var _z3 = useState(new Date().getFullYear()), dpYear = _z3[0], setDpYear = _z3[1];
         var _z4 = useState(new Date().getMonth()), dpMonth = _z4[0], setDpMonth = _z4[1];
         var photoInputRef = useRef(null);
-        var _u = useState({ title: '', reason: '', nextStep: '' }), newFight = _u[0], setNewFight = _u[1];
+        var _u = useState({ title: '', reason: '', nextStep: '', date: new Date().toISOString().split('T')[0] }), newFight = _u[0], setNewFight = _u[1];
         var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
         function toggleWish(id) {
@@ -998,9 +998,8 @@
         }
         function addFight() {
             if (!newFight.title || !newFight.reason) return;
-            var today = new Date().toISOString().split('T')[0];
-            setFights([{ id: Date.now(), date: today, title: newFight.title, reason: newFight.reason, nextStep: newFight.nextStep, status: 'open' }].concat(fights));
-            setNewFight({ title: '', reason: '', nextStep: '' });
+            setFights([{ id: Date.now(), date: newFight.date || new Date().toISOString().split('T')[0], title: newFight.title, reason: newFight.reason, nextStep: newFight.nextStep, status: 'open' }].concat(fights));
+            setNewFight({ title: '', reason: '', nextStep: '', date: new Date().toISOString().split('T')[0] });
             setShowFight(false);
         }
         function saveEditFight() {
@@ -1994,6 +1993,18 @@
                     )
                 ),
                 h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '日期'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', type: 'date', value: newFight.date, onChange: function(e) { setNewFight(Object.assign({}, newFight, { date: e.target.value })); } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '吵架原因'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', placeholder: '为什么吵架？', value: newFight.title, onChange: function(e) { setNewFight(Object.assign({}, newFight, { title: e.target.value })); } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '详细经过'),
                     h('div', { className: 'textarea-wrapper' },
                         h('textarea', { className: 'textarea-field', placeholder: '发生了什么？各自的想法是什么？', value: newFight.reason, onChange: function(e) { setNewFight(Object.assign({}, newFight, { reason: e.target.value })); }, style: { minHeight: 100 } })
@@ -2008,6 +2019,18 @@
             ),
             // 编辑吵架 Modal
             h(Modal, { show: showEditFight, title: '📝 编辑吵架记录', onClose: function() { setShowEditFight(false); }, onConfirm: saveEditFight, confirmText: '保存修改 💾', confirmClass: 'btn-primary-teal' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '吵架原因'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', value: editingFight ? editingFight.title : '', onChange: function(e) { if (editingFight) setEditingFight(Object.assign({}, editingFight, { title: e.target.value })); } })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '日期'),
+                    h('div', { className: 'input-wrapper input-wrapper-middle' },
+                        h('input', { className: 'input-field', type: 'date', value: editingFight ? editingFight.date : '', onChange: function(e) { if (editingFight) setEditingFight(Object.assign({}, editingFight, { date: e.target.value })); } })
+                    )
+                ),
                 h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '吵架原因'),
                     h('div', { className: 'input-wrapper input-wrapper-middle' },
