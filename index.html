@@ -251,6 +251,21 @@
         .gallery-item:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 6px 20px rgba(61,52,40,0.1); }
         .gallery-item-label { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 12px; background: linear-gradient(transparent, rgba(0,0,0,0.3)); color: #fff; font-size: 12px; font-weight: 600; text-align: center; }
 
+        /* Timeline */
+        .timeline { position: relative; padding-left: 30px; }
+        .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+        .timeline-item { position: relative; margin-bottom: 20px; padding: 16px 20px; background: var(--bg-content); border-radius: 16px; transition: all 0.3s var(--ease); }
+        .timeline-item:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(61,52,40,0.08); }
+        .timeline-item::before { content: ''; position: absolute; left: -24px; top: 20px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--primary); background: var(--bg); }
+        .timeline-item-diary::before { border-color: var(--primary); background: var(--primary); }
+        .timeline-item-wish::before { border-color: var(--pink); background: var(--pink); }
+        .timeline-item-photo::before { border-color: var(--app-blue); background: var(--app-blue); }
+        .timeline-item-fight::before { border-color: var(--error); background: var(--error); }
+        .timeline-date { font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-bottom: 4px; }
+        .timeline-icon { font-size: 16px; margin-right: 6px; }
+        .timeline-title { font-size: 14px; font-weight: 700; color: var(--text); }
+        .timeline-desc { font-size: 13px; color: var(--text-body); margin-top: 4px; line-height: 1.5; }
+
         /* Dates */
         .date-list { display: flex; flex-direction: column; gap: 12px; }
         .date-item { display: flex; align-items: center; gap: 16px; background: var(--bg-content); border-radius: 16px; padding: 14px 20px; transition: all 0.3s var(--ease); }
@@ -858,6 +873,7 @@
         var _x = useState(false), cloudStatus = _x[0], setCloudStatus = _x[1];
         var _y = useState(false), showTokenInput = _y[0], setShowTokenInput = _y[1];
         var _z = useState(GITHUB_TOKEN), editToken = _z[0], setEditToken = _z[1];
+        var _z2 = useState('grid'), galleryView = _z2[0], setGalleryView = _z2[1];
         var _u = useState({ title: '', reason: '', nextStep: '' }), newFight = _u[0], setNewFight = _u[1];
         var _v = useState(null), editingFight = _v[0], setEditingFight = _v[1];
 
@@ -1035,7 +1051,7 @@
                 // 异地恋：上一次分开 & 下一次见面
                 h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 } },
                     h('div', { className: 'card card-pattern-blue', style: { textAlign: 'center', cursor: 'pointer' }, onClick: function() { setEditSeparateDate(separateDateStr.split('T')[0]); setShowSeparateDateEdit(true); }, title: '点击修改上一次分开日期' },
-                        h('div', { style: { fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 } }, '🚉 上次分开'),
+                        h('div', { style: { fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 } }, '🚉 上次见面'),
                         h('div', { style: { fontSize: 32, fontWeight: 900, color: 'var(--error)' } }, String(Math.floor((new Date() - separateDate) / (1000*60*60*24)))),
                         h('div', { style: { fontSize: 12, color: 'var(--text-secondary)' } }, '天前 · ' + separateDate.toLocaleDateString('zh-CN'))
                     ),
@@ -1171,18 +1187,61 @@
             );
         }
 
-        // ====== 相册 ======
+        // ====== 相册（含时间轴） ======
         function renderGallery() {
-            return h('div', null,
-                h('div', { className: 'section-title' }, h('span', null, '📸 我们的回忆相册')),
-                h('div', { className: 'gallery-grid' },
-                    GALLERY_ITEMS.map(function(item, i) {
-                        return h('div', { key: i, className: 'gallery-item', style: { background: i % 2 === 0 ? 'var(--primary-bg)' : '#fde4e8' } },
-                            h('span', null, item.emoji),
-                            h('div', { className: 'gallery-item-label' }, item.label)
+            function renderTimeline() {
+                // 收集所有事件并按日期排序
+                var events = [];
+                // 日记
+                journalEntries.forEach(function(e) {
+                    events.push({ date: e.date, type: 'diary', icon: '📖', title: e.title, desc: e.content.substring(0, 50) + (e.content.length > 50 ? '...' : ''), mood: e.mood });
+                });
+                // 已完成心愿
+                wishes.filter(function(w) { return w.done; }).forEach(function(w) {
+                    events.push({ date: '2026-01-01', type: 'wish', icon: '🌟', title: '✅ ' + w.title, desc: '已完成的心愿' });
+                });
+                // 吵架记录
+                fights.forEach(function(f) {
+                    events.push({ date: f.date, type: 'fight', icon: '😤', title: f.title, desc: f.status === 'resolved' ? '已解决 ✓' : (f.status === 'wip' ? '改善中' : '未解决') });
+                });
+                // 照片（模拟日期）
+                GALLERY_ITEMS.forEach(function(item, i) {
+                    var d = new Date(2026, 0, 1);
+                    d.setDate(d.getDate() + i * 15);
+                    events.push({ date: d.toISOString().split('T')[0], type: 'photo', icon: item.emoji, title: item.label, desc: '📸 回忆照片' });
+                });
+                // 按日期排序（最新的在前）
+                events.sort(function(a, b) { return a.date < b.date ? 1 : -1; });
+                return h('div', { className: 'timeline' },
+                    events.map(function(ev, i) {
+                        return h('div', { key: i, className: 'timeline-item timeline-item-' + ev.type },
+                            h('div', { className: 'timeline-date' }, ev.date),
+                            h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
+                                h('span', { className: 'timeline-icon' }, ev.icon),
+                                h('span', { className: 'timeline-title' }, ev.title)
+                            ),
+                            ev.desc ? h('div', { className: 'timeline-desc' }, ev.desc) : null
                         );
                     })
-                )
+                );
+            }
+
+            return h('div', null,
+                h('div', { className: 'section-title' }, h('span', null, '📸 我们的回忆相册')),
+                h('div', { style: { marginBottom: 20, display: 'flex', gap: 8 } },
+                    h('button', { className: 'btn btn-small ' + (galleryView === 'grid' ? 'btn-primary-teal' : 'btn-default'), onClick: function() { setGalleryView('grid'); } }, '📷 照片墙'),
+                    h('button', { className: 'btn btn-small ' + (galleryView === 'timeline' ? 'btn-primary-teal' : 'btn-default'), onClick: function() { setGalleryView('timeline'); } }, '📅 时间轴')
+                ),
+                galleryView === 'grid'
+                    ? h('div', { className: 'gallery-grid' },
+                        GALLERY_ITEMS.map(function(item, i) {
+                            return h('div', { key: i, className: 'gallery-item', style: { background: i % 2 === 0 ? 'var(--primary-bg)' : '#fde4e8' } },
+                                h('span', null, item.emoji),
+                                h('div', { className: 'gallery-item-label' }, item.label)
+                            );
+                        })
+                    )
+                    : renderTimeline()
             );
         }
 
@@ -1203,7 +1262,7 @@
             // 在一起的日子
             var ls = loveStart;
             marks[dateKey(ls.getFullYear(), ls.getMonth(), ls.getDate())] = 'love';
-            // 上次分开
+            // 上次见面
             var sd = separateDate;
             marks[dateKey(sd.getFullYear(), sd.getMonth(), sd.getDate())] = 'separate';
             // 下次见面
@@ -1284,7 +1343,7 @@
             // 获取指定日期的标记名称
             function getMarkName(k) {
                 if (marks[k] === 'love') return '💕 在一起的日子';
-                if (marks[k] === 'separate') return '🚉 上次分开';
+                if (marks[k] === 'separate') return '🚉 上次见面';
                 if (marks[k] === 'meet') return '💞 下次见面 🎉';
                 if (marks[k] === 'special') {
                     for (var si = 0; si < specialDates.length; si++) {
@@ -1326,8 +1385,9 @@
                     h('div', { className: 'calendar-month' }, calYear + '年 ' + monthNames[calMonth]),
                     h('div', { className: 'calendar-nav' },
                         h('button', { className: 'calendar-nav-btn', onClick: function() { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); } else { setCalMonth(calMonth - 1); } } }, '‹'),
-                        h('button', { className: 'calendar-nav-btn', onClick: function() { setCalMonth(0); setCalYear(2026); } }, '2026'),
-                        h('button', { className: 'calendar-nav-btn', onClick: function() { setCalMonth(0); setCalYear(2027); } }, '2027'),
+                        h('button', { className: 'calendar-nav-btn', onClick: function() { setCalMonth(0); setCalYear(calYear - 1); } }, String(calYear - 1)),
+                        h('button', { className: 'calendar-nav-btn', onClick: function() { setCalMonth(0); setCalYear(calYear); }, style: { fontWeight: 800, color: 'var(--primary)' } }, String(calYear)),
+                        h('button', { className: 'calendar-nav-btn', onClick: function() { setCalMonth(0); setCalYear(calYear + 1); } }, String(calYear + 1)),
                         h('button', { className: 'calendar-nav-btn', onClick: function() { var d = new Date(); setCalMonth(d.getMonth()); setCalYear(d.getFullYear()); } }, '📅'),
                         h('button', { className: 'calendar-nav-btn', onClick: function() { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); } else { setCalMonth(calMonth + 1); } } }, '›')
                     )
@@ -1783,8 +1843,8 @@
                     )
                 )
             ),
-            // 修改上次分开日期 Modal
-            h(Modal, { show: showSeparateDateEdit, title: '🚉 修改上次分开日期', onClose: function() { setShowSeparateDateEdit(false); }, onConfirm: saveSeparateDate, confirmText: '保存 💾', confirmClass: 'btn-primary-teal' },
+            // 修改上次见面日期 Modal
+            h(Modal, { show: showSeparateDateEdit, title: '🚉 修改上次见面日期', onClose: function() { setShowSeparateDateEdit(false); }, onConfirm: saveSeparateDate, confirmText: '保存 💾', confirmClass: 'btn-primary-teal' },
                 h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '选择上一次分开的日期'),
                     h('div', { className: 'input-wrapper input-wrapper-middle' },
