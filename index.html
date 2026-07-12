@@ -870,8 +870,8 @@
         var _t3 = useState(firstDateStr.split('T')[0]), editFirstDate = _t3[0], setEditFirstDate = _t3[1];
         var _t4 = useState(separateDateStr.split('T')[0]), editSeparateDate = _t4[0], setEditSeparateDate = _t4[1];
         var _t5 = useState(nextMeetDateStr.split('T')[0]), editNextMeetDate = _t5[0], setEditNextMeetDate = _t5[1];
-        var _u = useState(0), calMonth = _u[0], setCalMonth = _u[1];
-        var _v = useState(2026), calYear = _v[0], setCalYear = _v[1];
+        var _u = useState(new Date().getMonth()), calMonth = _u[0], setCalMonth = _u[1];
+        var _v = useState(new Date().getFullYear()), calYear = _v[0], setCalYear = _v[1];
         var _w = useState(null), calPopup = _w[0], setCalPopup = _w[1];
         var _x = useState(false), cloudStatus = _x[0], setCloudStatus = _x[1];
         var _y = useState(false), showTokenInput = _y[0], setShowTokenInput = _y[1];
@@ -973,7 +973,8 @@
         }
         function addDate() {
             if (!editingDate || !editingDate.name) return;
-            setSpecialDates(specialDates.concat([{ icon: editingDate.icon || '💕', name: editingDate.name, date: new Date(editingDate.dateStr), color: editingDate.color || 'pink', isLunar: editingDate.isLunar || false }]));
+            var newDate = new Date(editingDate.dateStr + 'T12:00:00');
+            setSpecialDates(specialDates.concat([{ icon: editingDate.icon || '💕', name: editingDate.name, date: newDate, color: editingDate.color || 'pink', isLunar: editingDate.isLunar || false }]));
             setEditingDate(null);
             setShowDateEdit(false);
         }
@@ -1286,7 +1287,10 @@
                         photos.map(function(photo) {
                             return h('div', { key: photo.id, className: 'gallery-item', style: { background: '#fff', overflow: 'hidden', position: 'relative' } },
                                 h('img', { src: photo.data, style: { width: '100%', height: '100%', objectFit: 'cover' }, alt: photo.name }),
-                                h('div', { className: 'gallery-item-label' }, photo.date),
+                                h('div', { className: 'gallery-item-label' }, photo.title || photo.name || '照片'),
+                                h('div', { style: { position: 'absolute', top: 4, left: 4, display: 'flex', gap: 4 } },
+                                    h('button', { style: { background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: 8, padding: '2px 8px', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }, onClick: function() { var t = prompt('给这张照片取个名字：', photo.title || ''); if (t !== null) setPhotos(photos.map(function(p) { return p.id === photo.id ? Object.assign({}, p, { title: t }) : p; })); }, title: '编辑标题' }, '✏️')
+                                ),
                                 h('button', { style: { position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', fontSize: 12, lineHeight: '24px', textAlign: 'center' }, onClick: function() { deletePhoto(photo.id); }, title: '删除' }, '×')
                             );
                         }),
@@ -1828,9 +1832,13 @@
                         for (var i = 1; i <= daysInMonth; i++) cells.push(i);
                         return h('div', { style: { background: 'var(--bg)', borderRadius: 16, padding: 12, border: '2px solid var(--border)' } },
                             // 年份/月份快速跳转
-                            h('div', { style: { display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center', justifyContent: 'center' } },
-                                h('input', { type: 'number', value: dpYear, onChange: function(e) { var v = parseInt(e.target.value); if (v >= 1900 && v <= 2100) setDpYear(v); }, style: { width: 60, border: 'none', borderBottom: '2px dashed var(--border)', background: 'transparent', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, color: 'var(--text)', textAlign: 'center', outline: 'none' } }),
+                            h('div', { style: { display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' } },
+                                h('button', { className: 'btn btn-small btn-default', onClick: function() { setDpYear(dpYear - 10); }, style: { fontSize: 11, padding: '2px 6px', height: 26 } }, '-10'),
+                                h('button', { className: 'btn btn-small btn-default', onClick: function() { setDpYear(dpYear - 1); }, style: { fontSize: 11, padding: '2px 6px', height: 26 } }, '-1'),
+                                h('input', { type: 'number', value: dpYear, onChange: function(e) { var v = parseInt(e.target.value); if (v >= 1900 && v <= 2100) setDpYear(v); }, style: { width: 65, border: 'none', borderBottom: '2px dashed var(--border)', background: 'transparent', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, color: 'var(--text)', textAlign: 'center', outline: 'none' } }),
                                 h('span', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)' } }, '年'),
+                                h('button', { className: 'btn btn-small btn-default', onClick: function() { setDpYear(dpYear + 1); }, style: { fontSize: 11, padding: '2px 6px', height: 26 } }, '+1'),
+                                h('button', { className: 'btn btn-small btn-default', onClick: function() { setDpYear(dpYear + 10); }, style: { fontSize: 11, padding: '2px 6px', height: 26 } }, '+10'),
                                 h('select', { value: dpMonth, onChange: function(e) { setDpMonth(parseInt(e.target.value)); }, style: { border: '2px solid var(--border)', borderRadius: 8, padding: '4px 8px', background: 'var(--bg)', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, color: 'var(--text)', outline: 'none' } },
                                     monthNames.map(function(m, i) { return h('option', { value: i, key: i }, m); })
                                 )
