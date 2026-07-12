@@ -1505,18 +1505,37 @@
                         );
                     })
                 ),
-                // 点击日期弹出详情
-                calPopup ? h('div', { style: { marginTop: 12, padding: '12px 16px', borderRadius: 14, background: 'var(--bg)', border: '1.5px solid var(--border)' } },
-                    calPopup.name ? h('div', { style: { fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 } }, calPopup.name) : null,
-                    calPopup.diary ? h('div', { style: { fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 } },
-                        '📖 ' + calPopup.diary.title + ' · ' + calPopup.diary.date
-                    ) : null,
-                    calPopup.extra && calPopup.extra.length > 0 ? calPopup.extra.map(function(item, ei) {
-                        return h('div', { key: ei, style: { fontSize: 13, color: 'var(--text-secondary)', marginBottom: 2, padding: '2px 0' } },
-                            item.icon + ' ' + item.title + (item.mood ? ' ' + item.mood : '')
-                        );
-                    }) : null,
-                    h('button', { className: 'btn btn-small btn-default', onClick: function() { setCalPopup(null); }, style: { marginTop: 4 } }, '关闭')
+                // 点击日期弹出详情 - 全屏大卡片
+                calPopup ? h('div', { style: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(40,30,20,0.45)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 } },
+                    h('div', { style: { background: 'var(--bg-content)', borderRadius: 24, padding: '32px 28px', maxWidth: 500, width: '100%', maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(61,52,40,0.15)' } },
+                        // 标题
+                        h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 } },
+                            h('div', { style: { fontSize: 20, fontWeight: 700, color: 'var(--text)' } }, calPopup.name || '该日记录'),
+                            h('button', { style: { background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--text-secondary)', fontFamily: 'inherit' }, onClick: function() { setCalPopup(null); } }, '×')
+                        ),
+                        // 日记
+                        calPopup.diary ? h('div', { style: { background: 'var(--bg)', borderRadius: 16, padding: 16, marginBottom: 12 } },
+                            h('div', { style: { fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 } }, '📖 ' + calPopup.diary.date),
+                            h('div', { style: { fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 4 } }, calPopup.diary.title + ' ' + (calPopup.diary.mood || '')),
+                            h('div', { style: { fontSize: 13, color: 'var(--text-body)', lineHeight: 1.6 } }, calPopup.diary.content)
+                        ) : null,
+                        // 额外信息（吵架记录等）
+                        calPopup.extra && calPopup.extra.length > 0 ? calPopup.extra.map(function(item, ei) {
+                            return h('div', { key: ei, style: { background: 'var(--bg)', borderRadius: 16, padding: 16, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 } },
+                                h('span', { style: { fontSize: 24 } }, item.icon),
+                                h('div', null,
+                                    h('div', { style: { fontSize: 14, fontWeight: 700, color: 'var(--text)' } }, item.title),
+                                    item.desc ? h('div', { style: { fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 } }, item.desc) : null
+                                )
+                            );
+                        }) : null,
+                        // 没有内容时
+                        !calPopup.diary && (!calPopup.extra || calPopup.extra.length === 0) ? h('div', { style: { textAlign: 'center', padding: 24, color: 'var(--text-disabled)', fontSize: 14 } }, '✨ 这一天还没有记录') : null,
+                        // 关闭按钮
+                        h('div', { style: { textAlign: 'center', marginTop: 12 } },
+                            h('button', { className: 'btn btn-small btn-default', onClick: function() { setCalPopup(null); } }, '关闭')
+                        )
+                    )
                 ) : null,
                 // 图例
                 h('div', { className: 'calendar-legend' },
