@@ -962,7 +962,12 @@
         }
         function saveEditDate() {
             if (!editingDate || !editingDate.name) return;
-            setSpecialDates(specialDates.map(function(d) { return d.name === editingDate.origName ? editingDate : d; }));
+            var newDate = new Date(editingDate.dateStr + 'T12:00:00');
+            setSpecialDates(specialDates.map(function(d) {
+                return d.name === editingDate.origName
+                    ? { icon: editingDate.icon || '💕', name: editingDate.name, date: newDate, color: editingDate.color || 'pink', isLunar: editingDate.isLunar || false, countdown: editingDate.countdown || 'until' }
+                    : d;
+            }));
             setEditingDate(null);
             setShowDateEdit(false);
         }
