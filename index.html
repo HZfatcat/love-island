@@ -274,6 +274,9 @@
         .message-sender { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
         .message-text { font-size: 14px; line-height: 1.6; }
         .message-time { font-size: 11px; color: var(--text-disabled); margin-top: 4px; text-align: right; }
+        .message-bubble:hover .msg-action-btn { opacity: 1; }
+        .msg-action-btn { opacity: 0; background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px 5px; border-radius: 6px; transition: all 0.2s var(--ease); color: var(--text-secondary); font-family: inherit; }
+        .msg-action-btn:hover { background: rgba(114,93,66,0.1); color: var(--text-body); }
 
         /* Fight Records */
         .fight-list { display: flex; flex-direction: column; gap: 14px; }
@@ -593,6 +596,8 @@
         var _q = useState(''), moodNote = _q[0], setMoodNote = _q[1];
         var _r = useState(''), newMessage = _r[0], setNewMessage = _r[1];
         var _r2 = useState(true), messageIsSelf = _r2[0], setMessageIsSelf = _r2[1]; // true=自己, false=对方
+        var _r3 = useState(false), showEditMsg = _r3[0], setShowEditMsg = _r3[1];
+        var _r4 = useState(null), editingMsg = _r4[0], setEditingMsg = _r4[1];
         var _s = useState(coupleName), editName = _s[0], setEditName = _s[1];
         var _t = useState(loveStartStr.split('T')[0]), editStartDate = _t[0], setEditStartDate = _t[1];
         var _t2 = useState(meetDateStr.split('T')[0]), editMeetDate = _t2[0], setEditMeetDate = _t2[1];
@@ -691,6 +696,17 @@
             setMessages(messages.concat([{ id: Date.now(), sender: sender, text: newMessage, time: time, isSelf: messageIsSelf }]));
             setNewMessage('');
             // 不再自动回复，让用户自己切换身份发送
+        }
+        function deleteMessage(id) {
+            if (confirm('确定要删除这条留言吗？')) {
+                setMessages(messages.filter(function(m) { return m.id !== id; }));
+            }
+        }
+        function saveEditMessage() {
+            if (!editingMsg || !editingMsg.text.trim()) return;
+            setMessages(messages.map(function(m) { return m.id === editingMsg.id ? editingMsg : m; }));
+            setEditingMsg(null);
+            setShowEditMsg(false);
         }
         function addFight() {
             if (!newFight.title || !newFight.reason) return;
@@ -917,10 +933,24 @@
             var names = coupleName.split(' & ');
             return h('div', null,
                 h('div', { className: 'section-title' }, h('span', null, '💌 甜蜜留言板')),
+                // 当前发送身份提示
+                h('div', { style: { fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 } },
+                    h('span', { style: { display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: messageIsSelf ? 'var(--primary)' : 'var(--pink)' } }),
+                    '当前发送身份：',
+                    h('span', { style: { fontWeight: 700, color: messageIsSelf ? 'var(--primary)' : 'var(--pink)' } },
+                        messageIsSelf ? (names[0] || '我') : (names[1] || 'TA')
+                    )
+                ),
                 h('div', { className: 'message-board', style: { marginBottom: 20 } },
                     messages.map(function(msg) {
                         return h('div', { key: msg.id, className: 'message-bubble' + (msg.isSelf ? ' message-bubble-self' : ' message-bubble-other') },
-                            h('div', { className: 'message-sender' }, msg.sender),
+                            h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                                h('div', { className: 'message-sender' }, msg.sender),
+                                h('div', { className: 'msg-action-btn' },
+                                    h('button', { className: 'msg-action-btn', onClick: function() { setEditingMsg(Object.assign({}, msg)); setShowEditMsg(true); }, title: '编辑' }, '✏️'),
+                                    h('button', { className: 'msg-action-btn', onClick: function() { deleteMessage(msg.id); }, title: '删除', style: { color: 'var(--error)' } }, '🗑️')
+                                )
+                            ),
                             h('div', { className: 'message-text' }, msg.text),
                             h('div', { className: 'message-time' }, msg.time)
                         );
@@ -928,10 +958,10 @@
                 ),
                 h('div', { style: { display: 'flex', gap: 12, alignItems: 'center' } },
                     h('button', {
-                        className: 'btn btn-small ' + (messageIsSelf ? 'btn-primary' : 'btn-default'),
+                        className: 'btn btn-small ' + (messageIsSelf ? 'btn-primary' : 'btn-primary-pink'),
                         onClick: function() { setMessageIsSelf(!messageIsSelf); },
                         title: '切换身份',
-                        style: { flexShrink: 0, fontSize: 13, padding: '0 12px', height: 40, borderRadius: 'var(--r-pill)' },
+                        style: { flexShrink: 0, fontSize: 13, padding: '0 14px', height: 40, borderRadius: 'var(--r-pill)' },
                     }, messageIsSelf ? (names[0] || '我') + ' 💬' : (names[1] || 'TA') + ' 💬'),
                     h('div', { className: 'input-wrapper input-wrapper-middle', style: { flex: 1 } },
                         h('input', { className: 'input-field', placeholder: '说点什么吧...', value: newMessage, onChange: function(e) { setNewMessage(e.target.value); }, onKeyDown: handleKeyDown })
@@ -1215,6 +1245,15 @@
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '选择第一次见面的日期'),
                     h('div', { className: 'input-wrapper input-wrapper-middle' },
                         h('input', { className: 'input-field', type: 'date', value: editFirstDate, onChange: function(e) { setEditFirstDate(e.target.value); } })
+                    )
+                )
+            ),
+            // 编辑留言 Modal
+            h(Modal, { show: showEditMsg, title: '✏️ 编辑留言', onClose: function() { setShowEditMsg(false); }, onConfirm: saveEditMessage, confirmText: '保存修改 💾', confirmClass: 'btn-primary-teal' },
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'block' } }, '留言内容'),
+                    h('div', { className: 'textarea-wrapper' },
+                        h('textarea', { className: 'textarea-field', value: editingMsg ? editingMsg.text : '', onChange: function(e) { if (editingMsg) setEditingMsg(Object.assign({}, editingMsg, { text: e.target.value })); }, style: { minHeight: 80 } })
                     )
                 )
             )
