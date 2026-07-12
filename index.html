@@ -507,9 +507,6 @@
     var GITHUB_DATA_URL = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/data.json';
     var GITHUB_RAW_URL = 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/master/data.json';
     var CLOUD_SYNCING = {};
-    var CLOUD_UPLOAD_TIMER = null;
-    var CLOUD_IS_UPLOADING = false;
-    var CLOUD_LAST_UPLOAD = 0;
 
     function loadData(key, fallback) {
         try {
@@ -527,13 +524,6 @@
 
     function saveData(key, data) {
         try { localStorage.setItem('love_island_' + key, JSON.stringify(data)); } catch(e) {}
-        if (CLOUD_SYNCING[key]) return;
-        // 防抖：500ms 内多次修改只上传一次
-        if (CLOUD_UPLOAD_TIMER) clearTimeout(CLOUD_UPLOAD_TIMER);
-        CLOUD_UPLOAD_TIMER = setTimeout(function() {
-            CLOUD_UPLOAD_TIMER = null;
-            uploadToCloud();
-        }, 500);
     }
 
     function getAllData() {
@@ -819,19 +809,8 @@
         useEffect(function() { saveData('nextMeetDate', nextMeetDateStr); }, [nextMeetDateStr]);
         useEffect(function() { saveData('specialDates', specialDates); }, [specialDates]);
 
-        // 启动云端同步
+        // 监听云端同步事件（供手动同步使用）
         useEffect(function() {
-            if (!GITHUB_TOKEN) return;
-            downloadFromCloud().then(function(ok) {
-                if (ok) setCloudStatus(true);
-            });
-            // 每15秒检查云端更新
-            var timer = setInterval(function() {
-                downloadFromCloud().then(function(ok) {
-                    if (ok) setCloudStatus(true);
-                });
-            }, 15000);
-            // 监听云端同步事件
             function handler(e) {
                 var key = e.detail.key;
                 var data = e.detail.data;
@@ -848,10 +827,7 @@
                 else if (key === 'specialDates') { setSpecialDates(data.map(function(d) { return Object.assign({}, d, { date: new Date(d.date) }); })); }
             }
             window.addEventListener('cloud-sync', handler);
-            return function() {
-                clearInterval(timer);
-                window.removeEventListener('cloud-sync', handler);
-            };
+            return function() { window.removeEventListener('cloud-sync', handler); };
         }, []);
 
         var _g = useState(false), showDiary = _g[0], setShowDiary = _g[1];
@@ -1049,6 +1025,16 @@
         }
         function handleKeyDown(e) {
             if (e.key === 'Enter') sendMessage();
+        }
+        function syncNow() {
+            if (!GITHUB_TOKEN) return;
+            setCloudStatus(true);
+            uploadToCloud();
+            setTimeout(function() {
+                downloadFromCloud().then(function(ok) {
+                    if (ok) setCloudStatus(true);
+                });
+            }, 2000);
         }
         function handlePhotoUpload(e) {
             var files = e.target.files;
@@ -1741,6 +1727,7 @@
                         h('div', { style: { fontSize: 14, color: 'var(--success)' } }, '☁️'),
                         h('div', { className: 'header-stat-label' }, '已同步')
                     ) : null,
+                    GITHUB_TOKEN ? h('button', { className: 'btn btn-small btn-primary', onClick: syncNow, style: { fontSize: 12, height: 32, padding: '0 12px' } }, '☁️ 同步') : null,
                     !GITHUB_TOKEN ? h('button', { className: 'btn btn-small btn-primary', onClick: function() { setEditToken(''); setShowTokenInput(true); }, style: { fontSize: 12, height: 32, padding: '0 12px' } }, '🔑 设置同步') : null
                 )
             ),
