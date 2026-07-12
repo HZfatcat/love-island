@@ -219,7 +219,7 @@
         .journal-entry-yellow { border-left-color: var(--app-yellow); }
         .journal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .journal-date { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
-        .journal-mood { font-size: 22px; display: inline-flex; align-items: center; gap: 4px; }
+        .journal-mood { font-size: 20px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; background: rgba(25,200,185,0.08); padding: 2px 10px; border-radius: 50px; }
         .journal-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
         .journal-text { font-size: 14px; line-height: 1.7; color: var(--text-body); }
         .journal-actions { display: flex; gap: 6px; flex-shrink: 0; }
@@ -852,6 +852,7 @@
         var _q = useState(''), moodNote = _q[0], setMoodNote = _q[1];
         var _r = useState(''), newMessage = _r[0], setNewMessage = _r[1];
         var _r2 = useState(true), messageIsSelf = _r2[0], setMessageIsSelf = _r2[1]; // true=自己, false=对方
+        var _r3 = useState(true), diaryIsSelf = _r3[0], setDiaryIsSelf = _r3[1];
         var _r3 = useState(false), showEditMsg = _r3[0], setShowEditMsg = _r3[1];
         var _r4 = useState(null), editingMsg = _r4[0], setEditingMsg = _r4[1];
         var _s = useState(coupleName), editName = _s[0], setEditName = _s[1];
@@ -882,7 +883,8 @@
         function addDiary() {
             if (!newDiary.title || !newDiary.content) return;
             var today = new Date().toISOString().split('T')[0];
-            setJournalEntries([{ id: Date.now(), date: today, mood: newDiary.mood, title: newDiary.title, content: newDiary.content, color: newDiary.color }].concat(journalEntries));
+            var names = coupleName.split(' & ');
+            setJournalEntries([{ id: Date.now(), date: today, mood: newDiary.mood, title: newDiary.title, content: newDiary.content, color: newDiary.color, sender: diaryIsSelf ? (names[0] || '我') : (names[1] || 'TA') }].concat(journalEntries));
             setNewDiary({ title: '', content: '', mood: '😊', color: 'pink' });
             setShowDiary(false);
         }
@@ -1176,10 +1178,10 @@
                 ),
                 h('div', { className: 'journal-list' },
                     journalEntries.map(function(entry) {
-                        var moodLabels = { '😊': '开心', '🥰': '甜蜜', '😍': '超爱', '😌': '平静', '🥺': '想你', '🎄': '圣诞', '💕': '甜蜜' };
+                        var moodLabels = { '😊': '开心', '🥰': '甜蜜', '😍': '超爱', '😌': '平静', '🥺': '想你' };
                         return h('div', { key: entry.id, className: 'journal-entry journal-entry-' + entry.color },
                             h('div', { className: 'journal-header' },
-                                h('span', { className: 'journal-date' }, entry.date),
+                                h('span', { className: 'journal-date' }, entry.date + ' · ' + (entry.sender || '')),
                                 h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
                                     h('span', { className: 'journal-mood' }, entry.mood + ' ' + (moodLabels[entry.mood] || '')),
                                     h('div', { className: 'journal-actions' },
@@ -1766,7 +1768,7 @@
                 h('div', { style: { marginBottom: 16 } },
                     h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 8, display: 'block' } }, '心情'),
                     h('div', { style: { display: 'flex', gap: 8 } },
-                        ['😊','🥰','😍','😌','🥺','🎄','💕'].map(function(m) {
+                        ['😊','🥰','😍','😌','🥺'].map(function(m) {
                             return h('button', {
                                 key: m,
                                 className: 'mood-btn' + (newDiary.mood === m ? ' mood-btn-active' : ''),
@@ -1774,6 +1776,13 @@
                                 style: { padding: '8px 12px' },
                             }, h('span', { style: { fontSize: 24 } }, m));
                         })
+                    )
+                ),
+                h('div', { style: { marginBottom: 16 } },
+                    h('label', { style: { fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 8, display: 'block' } }, '谁写的？'),
+                    h('div', { style: { display: 'flex', gap: 8 } },
+                        h('button', { className: 'btn btn-small ' + (diaryIsSelf ? 'btn-primary-teal' : 'btn-default'), onClick: function() { setDiaryIsSelf(true); } }, coupleName.split(' & ')[0] || '我'),
+                        h('button', { className: 'btn btn-small ' + (!diaryIsSelf ? 'btn-primary-teal' : 'btn-default'), onClick: function() { setDiaryIsSelf(false); } }, coupleName.split(' & ')[1] || 'TA')
                     )
                 )
             ),
