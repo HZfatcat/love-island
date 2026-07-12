@@ -601,13 +601,7 @@
         { id: 4, title: '一起养一只猫', desc: '取名叫做「小团子」', done: false, liked: false },
         { id: 5, title: '写100封情书', desc: '已经写了23封，继续加油！', done: false, liked: true },
     ];
-    var INIT_MESSAGES = [
-        { id: 1, sender: '小可爱', text: '早安呀～今天也要开开心心的！', time: '08:30', isSelf: true },
-        { id: 2, sender: '大笨蛋', text: '早安！今天梦到你了，所以醒来特别开心🥰', time: '08:35', isSelf: false },
-        { id: 3, sender: '小可爱', text: '今晚我们一起去看星星吧？天气预报说天气很好呢', time: '14:12', isSelf: true },
-        { id: 4, sender: '大笨蛋', text: '好呀好呀！我带上我新买的小毯子，给你披着~', time: '14:15', isSelf: false },
-        { id: 5, sender: '小可爱', text: '你真好 ❤️ 那晚上见！', time: '14:16', isSelf: true },
-    ];
+    var INIT_MESSAGES = [];
     var INIT_FIGHTS = [
         { id: 1, date: '2025-03-10', title: '忘记倒垃圾', reason: '因为工作太忙忘记倒垃圾，对方觉得不被重视。', nextStep: '设置手机提醒，每天晚饭后检查一遍垃圾桶。', status: 'resolved' },
         { id: 2, date: '2025-05-20', title: '约会迟到', reason: '约好6点看电影，迟到了20分钟，手机还没电了联系不上。', nextStep: '以后提前30分钟出门，随身带充电宝。', status: 'wip' },
@@ -994,7 +988,7 @@
         }
         function deleteMessage(id) {
             if (confirm('确定要删除这条留言吗？')) {
-                setMessages(messages.filter(function(m) { return m.id !== id; }));
+                setMessages(function(prev) { return prev.filter(function(m) { return m.id !== id; }); });
             }
         }
         function saveEditMessage() {
