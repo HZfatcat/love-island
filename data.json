@@ -1,25 +1,7 @@
 {
-  "journal": [
-    {
-      "id": 1783846316809,
-      "date": "2026-07-12",
-      "mood": "🥺",
-      "title": "没想到分开才不过三天.......",
-      "content": "今天也很想乾乾哥哥所以写了这个网站",
-      "color": "pink",
-      "sender": "雯雯"
-    }
-  ],
+  "journal": [],
   "wishes": [],
-  "messages": [
-    {
-      "id": 1783845407562,
-      "sender": "雯雯",
-      "text": "才是分开第三天吗 可是真的好想你啊 还有九天才能看见你",
-      "time": "16:36",
-      "isSelf": false
-    }
-  ],
+  "messages": [],
   "fights": [],
   "coupleName": "乾乾 & 雯雯",
   "loveStart": "2026-06-23T00:00:00.000Z",
@@ -29,21 +11,28 @@
   "nextMeetDate": "2026-07-21T00:00:00.000Z",
   "specialDates": [
     {
+      "icon": "💕",
+      "name": "在一起的日子",
+      "date": "2024-02-14T00:00:00.000Z",
+      "color": "pink"
+    },
+    {
       "icon": "🎂",
       "name": "她的生日",
-      "date": "2002-03-02T04:00:00.000Z",
-      "color": "purple",
-      "isLunar": true,
-      "countdown": "until"
+      "date": "2025-08-15T00:00:00.000Z",
+      "color": "teal"
     },
     {
       "icon": "🎂",
       "name": "他的生日",
-      "date": "1999-12-27T04:00:00.000Z",
-      "color": "blue",
-      "isLunar": true,
-      "countdown": "until",
-      "dateType": "custom"
+      "date": "2025-11-20T00:00:00.000Z",
+      "color": "blue"
+    },
+    {
+      "icon": "💍",
+      "name": "求婚纪念日",
+      "date": "2025-06-01T00:00:00.000Z",
+      "color": "purple"
     },
     {
       "icon": "🎄",
@@ -56,42 +45,6 @@
       "name": "跨年夜",
       "date": "2026-01-01T00:00:00.000Z",
       "color": "pink"
-    },
-    {
-      "icon": "💑",
-      "name": "第一次亲脸",
-      "date": "2026-03-16T04:00:00.000Z",
-      "color": "pink",
-      "isLunar": true,
-      "countdown": "since",
-      "dateType": "custom"
-    },
-    {
-      "icon": "💑",
-      "name": "第一次接吻",
-      "date": "2026-03-23T04:00:00.000Z",
-      "color": "teal",
-      "isLunar": false,
-      "countdown": "since",
-      "dateType": "custom"
-    },
-    {
-      "icon": "💑",
-      "name": "贴贴",
-      "date": "2026-04-06T04:00:00.000Z",
-      "color": "pink",
-      "isLunar": false,
-      "countdown": "since",
-      "dateType": "custom"
-    },
-    {
-      "icon": "💕",
-      "name": "睡觉😴",
-      "date": "2026-04-17T04:00:00.000Z",
-      "color": "pink",
-      "isLunar": false,
-      "countdown": "since",
-      "dateType": "custom"
     }
   ]
 }
