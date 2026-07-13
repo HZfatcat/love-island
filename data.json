@@ -1,7 +1,15 @@
 {
   "journal": [],
   "wishes": [],
-  "messages": [],
+  "messages": [
+    {
+      "id": 1783913074203,
+      "sender": "雯雯",
+      "text": "乾乾哥哥 想你了",
+      "time": "11:24",
+      "isSelf": false
+    }
+  ],
   "fights": [],
   "coupleName": "乾乾 & 雯雯",
   "loveStart": "2026-06-23T00:00:00.000Z",
