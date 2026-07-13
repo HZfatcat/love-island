@@ -11,40 +11,19 @@
   "nextMeetDate": "2026-07-21T00:00:00.000Z",
   "specialDates": [
     {
-      "icon": "💕",
-      "name": "在一起的日子",
-      "date": "2024-02-14T00:00:00.000Z",
-      "color": "pink"
-    },
-    {
       "icon": "🎂",
       "name": "她的生日",
-      "date": "2025-08-15T00:00:00.000Z",
-      "color": "teal"
+      "date": "2002-03-02T04:00:00.000Z",
+      "color": "teal",
+      "isLunar": true,
+      "countdown": "until",
+      "dateType": "custom"
     },
     {
       "icon": "🎂",
       "name": "他的生日",
       "date": "2025-11-20T00:00:00.000Z",
       "color": "blue"
-    },
-    {
-      "icon": "💍",
-      "name": "求婚纪念日",
-      "date": "2025-06-01T00:00:00.000Z",
-      "color": "purple"
-    },
-    {
-      "icon": "🎄",
-      "name": "圣诞节",
-      "date": "2025-12-25T00:00:00.000Z",
-      "color": "yellow"
-    },
-    {
-      "icon": "🎆",
-      "name": "跨年夜",
-      "date": "2026-01-01T00:00:00.000Z",
-      "color": "pink"
     }
   ]
 }
