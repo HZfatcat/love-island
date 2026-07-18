@@ -21,17 +21,19 @@
     {
       "icon": "🎂",
       "name": "她的生日",
-      "date": "2002-03-02T04:00:00.000Z",
+      "date": "2000-03-02T00:00:00.000Z",
       "color": "teal",
-      "isLunar": true,
+      "isLunar": false,
       "countdown": "until",
       "dateType": "custom"
     },
     {
       "icon": "🎂",
       "name": "他的生日",
-      "date": "2025-11-20T00:00:00.000Z",
-      "color": "blue"
+      "date": "2000-11-20T00:00:00.000Z",
+      "color": "blue",
+      "countdown": "until",
+      "dateType": "custom"
     }
   ]
 }
