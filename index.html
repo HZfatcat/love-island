@@ -529,7 +529,8 @@
     function getAllData() {
         var result = {};
         var keys = ['journal', 'wishes', 'messages', 'fights', 'coupleName', 'loveStart',
-                     'meetDate', 'firstDate', 'separateDate', 'nextMeetDate', 'specialDates'];
+                     'meetDate', 'firstDate', 'separateDate', 'nextMeetDate', 'specialDates',
+                     'dailyReports', 'weeklyReports'];
         keys.forEach(function(k) {
             try { result[k] = JSON.parse(localStorage.getItem('love_island_' + k)); } catch(e) {}
         });
@@ -642,6 +643,8 @@
         { key: 'gallery', icon: '📸', label: '回忆相册' },
         { key: 'dates', icon: '📅', label: '纪念日' },
         { key: 'messages', icon: '💌', label: '留言板' },
+        { key: 'analysis', icon: '📊', label: '恋爱分析' },
+        { key: 'settings', icon: '⚙️', label: '设置' },
     ];
 
     // ====== 工具函数 ======
@@ -791,6 +794,8 @@
         var specDates = loadData('specialDates', null);
         var _f2 = useState(specDates ? specDates.map(function(d) { return Object.assign({}, d, { date: new Date(d.date) }); }) : SPECIAL_DATES);
         var specialDates = _f2[0], setSpecialDates = _f2[1];
+        var _f7 = useState(function() { return loadData('dailyReports', []); }), dailyReports = _f7[0], setDailyReports = _f7[1];
+        var _f8 = useState(function() { return loadData('weeklyReports', []); }), weeklyReports = _f8[0], setWeeklyReports = _f8[1];
 
         // 倒计时依赖 specialDates，放在后面初始化
         var cd = useCountdown(loveStart, specialDates);
@@ -808,6 +813,8 @@
         useEffect(function() { saveData('separateDate', separateDateStr); }, [separateDateStr]);
         useEffect(function() { saveData('nextMeetDate', nextMeetDateStr); }, [nextMeetDateStr]);
         useEffect(function() { saveData('specialDates', specialDates); }, [specialDates]);
+        useEffect(function() { saveData('dailyReports', dailyReports); }, [dailyReports]);
+        useEffect(function() { saveData('weeklyReports', weeklyReports); }, [weeklyReports]);
 
         // 监听云端同步事件（供手动同步使用）
         useEffect(function() {
@@ -825,6 +832,8 @@
                 else if (key === 'separateDate') { setSeparateDateStr(data); }
                 else if (key === 'nextMeetDate') { setNextMeetDateStr(data); }
                 else if (key === 'specialDates') { setSpecialDates(data.map(function(d) { return Object.assign({}, d, { date: new Date(d.date) }); })); }
+                else if (key === 'dailyReports') { setDailyReports(data || []); }
+                else if (key === 'weeklyReports') { setWeeklyReports(data || []); }
             }
             window.addEventListener('cloud-sync', handler);
             return function() { window.removeEventListener('cloud-sync', handler); };
@@ -1709,6 +1718,173 @@
                 )
             );
         }
+        // ====== 恋爱分析 ======
+        function renderAnalysis() {
+            var reports = dailyReports || [];
+            var weekly = weeklyReports || [];
+            var monthTotal = reports.reduce(function(s, r) { return s + r.totalMessages; }, 0);
+            var monthSweetness = reports.length > 0
+                ? Math.round(reports.reduce(function(s, r) { return s + r.sweetness; }, 0) / reports.length) : 0;
+            var fastest = reports.filter(function(r) { return r.shortestResponse !== 'N/A'; })
+                .sort(function(a, b) { return parseInt(a.shortestResponse) - parseInt(b.shortestResponse); });
+            var slowest = reports.filter(function(r) { return r.longestResponse !== 'N/A'; })
+                .sort(function(a, b) { return parseInt(b.longestResponse) - parseInt(a.longestResponse); });
+            var latestWeek = weekly.length > 0 ? weekly[weekly.length - 1] : null;
+            return h('div', null,
+                h('div', { className: 'section-title' }, h('span', null, '📊 恋爱分析')),
+                // 顶部统计卡片
+                h('div', { className: 'calendar-stats', style: { marginBottom: 24 } },
+                    h('div', { className: 'calendar-stat' },
+                        h('div', { className: 'calendar-stat-num', style: { color: 'var(--primary)' } }, String(monthTotal)),
+                        h('div', { className: 'calendar-stat-label' }, '💬 本月聊天总数')
+                    ),
+                    h('div', { className: 'calendar-stat' },
+                        h('div', { className: 'calendar-stat-num', style: { color: 'var(--success)' } },
+                            fastest.length > 0 ? fastest[0].shortestResponse : 'N/A'),
+                        h('div', { className: 'calendar-stat-label' }, '⚡ 最快回复纪录')
+                    ),
+                    h('div', { className: 'calendar-stat' },
+                        h('div', { className: 'calendar-stat-num', style: { color: 'var(--error)' } },
+                            slowest.length > 0 ? slowest[0].longestResponse : 'N/A'),
+                        h('div', { className: 'calendar-stat-label' }, '🐢 最长沉默纪录')
+                    ),
+                    h('div', { className: 'calendar-stat' },
+                        h('div', { className: 'calendar-stat-num', style: { color: 'var(--pink)', fontSize: 22 } },
+                            monthSweetness > 0 ? Array(monthSweetness).fill('⭐').join('') : 'N/A'),
+                        h('div', { className: 'calendar-stat-label' }, '⭐ 本月平均甜蜜度')
+                    )
+                ),
+                // 本周汇总
+                latestWeek ? h('div', { className: 'card card-pattern-pink', style: { marginBottom: 24 } },
+                    h('div', { style: { fontSize: 18, fontWeight: 700, marginBottom: 12 } }, '📅 本周汇总'),
+                    h('div', null,
+                        h('div', { style: { display: 'flex', gap: 24, flexWrap: 'wrap' } },
+                            h('span', null, '💬 总消息：', h('strong', null, String(latestWeek.totalMessages)), ' 条'),
+                            h('span', null, '👤 你：', h('strong', null, String(latestWeek.youMessages)), ' 条'),
+                            h('span', null, '👤 对方：', h('strong', null, String(latestWeek.partnerMessages)), ' 条')
+                        ),
+                        h('div', { style: { display: 'flex', gap: 24, marginTop: 8, flexWrap: 'wrap' } },
+                            h('span', null, '📅 最活跃日：', h('strong', null, latestWeek.bestDay || 'N/A')),
+                            h('span', null, '😴 最沉默日：', h('strong', null, latestWeek.worstDay || 'N/A')),
+                            h('span', null, '⭐ 甜蜜度：', h('strong', null, Array(Math.round(latestWeek.sweetnessAvg)).fill('⭐').join('') || 'N/A'))
+                        )
+                    )
+                ) : null,
+                // 日报列表
+                h('div', { className: 'section-title' }, h('span', null, '📋 近期日报')),
+                h('div', { className: 'journal-list' },
+                    reports.length === 0
+                        ? h('div', { style: { textAlign: 'center', color: 'var(--text-secondary)', padding: 40 } },
+                            '还没有数据，等机器人同步后就会显示~')
+                        : reports.slice(0, 7).map(function(r, i) {
+                            return h('div', { key: i, className: 'journal-entry', style: { borderLeftColor: 'var(--pink)' } },
+                                h('div', { className: 'journal-header' },
+                                    h('span', { className: 'journal-date' }, r.date),
+                                    h('span', { className: 'journal-mood' }, r.sweetnessStars || '')
+                                ),
+                                h('div', { style: { display: 'flex', gap: 16, fontSize: 13, color: 'var(--text-secondary)' } },
+                                    h('span', null, '💬 ' + r.totalMessages + ' 条'),
+                                    h('span', null, '⚡ ' + r.shortestResponse),
+                                    h('span', null, '🐢 ' + r.longestResponse)
+                                ),
+                                h('div', { style: { display: 'flex', gap: 16, marginTop: 4, fontSize: 13 } },
+                                    h('span', null, '👤 你：' + r.youMessages),
+                                    h('span', null, '👤 对方：' + r.partnerMessages)
+                                )
+                            );
+                        })
+                )
+            );
+        }
+        // ====== 设置 ======
+        function renderSettings() {
+            var _a = useState(GITHUB_TOKEN), token = _a[0], setToken = _a[1];
+            var _b = useState(''), msg = _b[0], setMsg = _b[1];
+            var _c = useState(false), saving = _c[0], setSaving = _c[1];
+            var _d = useState({
+                nextMeetDate: nextMeetDateStr ? nextMeetDateStr.split('T')[0] : '',
+                weather_city: '',
+                loveStart: loveStartStr ? loveStartStr.split('T')[0] : '2026-06-23',
+            }), form = _d[0], setForm = _d[1];
+            function handleChange(key, value) {
+                var f = {}; for (var k in form) f[k] = form[k]; f[key] = value; setForm(f);
+            }
+            function saveToken() {
+                localStorage.setItem('love_island_gh_token', token);
+                GITHUB_TOKEN = token;
+                setMsg('✅ Token 已保存');
+                setTimeout(function() { setMsg(''); }, 2000);
+            }
+            function saveConfig() {
+                if (!token) { setMsg('⚠️ 请先输入 GitHub Token'); return; }
+                setSaving(true); setMsg('');
+                var data = getAllData();
+                if (form.nextMeetDate) data.nextMeetDate = form.nextMeetDate + 'T00:00:00.000Z';
+                if (form.weather_city) data.weather_city = form.weather_city;
+                if (form.loveStart) data.loveStart = form.loveStart + 'T00:00:00.000Z';
+                var content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+                fetch(GITHUB_DATA_URL, {
+                    headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
+                }).then(function(r) { return r.json(); }).then(function(res) {
+                    var sha = res.sha || '';
+                    return fetch(GITHUB_DATA_URL, {
+                        method: 'PUT',
+                        headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+                        body: JSON.stringify({ message: '⚙️ 从看板更新配置', content: content, sha: sha })
+                    });
+                }).then(function(r) { return r.json(); }).then(function() {
+                    setMsg('✅ 已同步到 GitHub，机器人约 5 分钟后会自动同步~');
+                    setSaving(false);
+                    setTimeout(function() { setMsg(''); }, 3000);
+                }).catch(function(e) {
+                    setMsg('❌ 保存失败');
+                    setSaving(false);
+                });
+            }
+            return h('div', null,
+                h('div', { className: 'section-title' }, h('span', null, '⚙️ 设置')),
+                // Token
+                h('div', { className: 'card card-pattern-default', style: { marginBottom: 20 } },
+                    h('div', { style: { fontSize: 14, fontWeight: 700, marginBottom: 8 } }, '🔑 GitHub Token'),
+                    h('div', { style: { display: 'flex', gap: 8 } },
+                        h('div', { className: 'input-wrapper input-wrapper-middle', style: { flex: 1 } },
+                            h('input', { className: 'input-field', type: 'password', value: token, onChange: function(e) { setToken(e.target.value); }, placeholder: '输入 GitHub Personal Access Token' })
+                        ),
+                        h('button', { className: 'btn btn-primary-teal btn-middle', onClick: saveToken }, '保存')
+                    ),
+                    h('div', { style: { fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 } },
+                        'Token 仅存于浏览器本地，不会上传到其他服务器')
+                ),
+                // 配置项
+                h('div', { className: 'card card-pattern-default', style: { marginBottom: 20 } },
+                    h('div', { style: { fontSize: 14, fontWeight: 700, marginBottom: 16 } }, '📅 配置信息'),
+                    h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+                        h('div', null,
+                            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 4 } }, '下次见面日期'),
+                            h('div', { className: 'input-wrapper input-wrapper-middle' },
+                                h('input', { className: 'input-field', type: 'date', value: form.nextMeetDate, onChange: function(e) { handleChange('nextMeetDate', e.target.value); } })
+                            )
+                        ),
+                        h('div', null,
+                            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 4 } }, '对象所在城市'),
+                            h('div', { className: 'input-wrapper input-wrapper-middle' },
+                                h('input', { className: 'input-field', type: 'text', value: form.weather_city, onChange: function(e) { handleChange('weather_city', e.target.value); }, placeholder: '如：北京' })
+                            )
+                        ),
+                        h('div', null,
+                            h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 4 } }, '恋爱起始日'),
+                            h('div', { className: 'input-wrapper input-wrapper-middle' },
+                                h('input', { className: 'input-field', type: 'date', value: form.loveStart, onChange: function(e) { handleChange('loveStart', e.target.value); } })
+                            )
+                        )
+                    )
+                ),
+                h('button', { className: 'btn btn-primary-teal btn-large', onClick: saveConfig, disabled: saving },
+                    saving ? '⏳ 保存中...' : '💾 保存到 GitHub'
+                ),
+                msg ? h('div', { style: { marginTop: 12, fontSize: 14, fontWeight: 600, color: msg.indexOf('✅') >= 0 ? 'var(--success)' : 'var(--error)' } }, msg) : null
+            );
+        }
 
         // ====== 渲染 ======
         var tabContent = null;
@@ -1719,6 +1895,8 @@
         else if (activeTab === 'dates') tabContent = renderDates();
         else if (activeTab === 'messages') tabContent = renderMessages();
         else if (activeTab === 'fights') tabContent = renderFights();
+        else if (activeTab === 'analysis') tabContent = renderAnalysis();
+        else if (activeTab === 'settings') tabContent = renderSettings();
         var names = coupleName.split(' & ');
 
         return h('div', { className: 'app-container' },
